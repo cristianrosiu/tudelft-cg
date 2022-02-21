@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "framework/third_party/nativefiledialog",
+		"source" : "framework/third_party/nativefiledialog"
+	}
+}
