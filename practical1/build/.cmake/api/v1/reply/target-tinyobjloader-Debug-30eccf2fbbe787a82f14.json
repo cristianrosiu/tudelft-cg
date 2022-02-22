@@ -1,0 +1,95 @@
+{
+	"archive" : {},
+	"artifacts" : 
+	[
+		{
+			"path" : "framework/third_party/tinyobjloader/libtinyobjloader.a"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"target_include_directories"
+		],
+		"files" : 
+		[
+			"framework/third_party/tinyobjloader/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 1,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 2,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 2,
+					"path" : "/Users/cristianrosiu/Documents/TUDelft/tudelft-cg/practical1/framework/third_party/tinyobjloader/include"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/Users/cristianrosiu/Documents/TUDelft/tudelft-cg/practical1/framework/third_party/tinyobjloader/include/tinyobjloader"
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"id" : "tinyobjloader::@9b74d22b9aa34cf3c85f",
+	"name" : "tinyobjloader",
+	"nameOnDisk" : "libtinyobjloader.a",
+	"paths" : 
+	{
+		"build" : "framework/third_party/tinyobjloader",
+		"source" : "framework/third_party/tinyobjloader"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "framework/third_party/tinyobjloader/src/tiny_obj_loader.cc",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

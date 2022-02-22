@@ -1,0 +1,3 @@
+# Hashes of file build rules.
+654cb92b4d4ad7be022fb847d4b57d4f framework/third_party/glfw3/src/CMakeFiles/update_mappings
+3bbfbfb0ba98012670ce99f4136b2695 framework/third_party/glm/CMakeFiles/uninstall

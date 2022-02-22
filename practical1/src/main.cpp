@@ -47,7 +47,11 @@ glm::vec4 lightPos { 1.0f, 1.0f, 0.4f, 1.0f };
 Mesh mesh;
 
 //Declare your own global variables here:
-int myVariableThatServesNoPurpose;
+float globalX = 0.0f;
+
+float alpha = 0.0f;
+float beta = 45.0f;
+float theta = 0.0f;
 
 ////////// Draw Functions
 
@@ -192,6 +196,21 @@ void drawArm()
     //3 Optional) make an animated snake out of these boxes
     //(an arm with 10 joints that moves using the animate function)
 
+    glm::mat4 rotation1 = glm::rotate(glm::mat4(1.0f), float(glm::radians(alpha)), glm::vec3(0, 0, 1));
+    glm::mat4 scale1    = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.2f));
+
+    glm::mat4 translate2 = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2.0f));
+    glm::mat4 rotation2  = glm::rotate(glm::mat4(1.0f), float(glm::radians(beta)), glm::vec3(1, 0, 0));
+    glm::mat4 scale2     = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
+
+    glm::mat4 translate3 = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 4.0f));
+    glm::mat4 rotation3  = glm::rotate(glm::mat4(1.0f), float(glm::radians(theta)), glm::vec3(0, 1, 0));
+    glm::mat4 scale3     = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
+
+    drawUnitCube(rotation1*scale1);
+    drawUnitCube(translate2*rotation2*scale2);
+    drawUnitCube(translate3*rotation3*scale3);
+
 }
 
 void drawLight()
@@ -209,6 +228,13 @@ void drawLight()
     //4) OPTIONAL
     //   Draw a sphere (consisting of triangles) instead of a cube.
 
+    glPushMatrix();
+    glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(lightPos));
+    glm::mat4 scale     = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
+    glMultMatrixf(glm::value_ptr(translate));
+    glMultMatrixf(glm::value_ptr(scale));
+    drawUnitCube(glm::mat4(1.0f));
+    glPopMatrix();
 }
 
 void drawMesh()
@@ -246,6 +272,10 @@ void display()
     case DisplayModeType::CUBE:
         drawCoordSystem();
         drawUnitCube(glm::mat4(1.0f));
+        break;
+    case DisplayModeType::ARM:
+        drawCoordSystem();
+        drawArm();
         break;
     default:
         break;
@@ -288,6 +318,14 @@ void keyboard(int key, int /* scancode */, int /* action */, int /* mods */)
     }
     case GLFW_KEY_ESCAPE: {
         pWindow->close();
+        break;
+    }
+    case GLFW_KEY_A: {
+        lightPos += glm::vec4(0.1f, 0.0f, 0.0f, 0.0f);
+        break;
+    }
+    case GLFW_KEY_S: {
+        lightPos += glm::vec4(-0.1f, 0.0f, 0.0f, 0.0f);
         break;
     }
     case GLFW_KEY_L: {
