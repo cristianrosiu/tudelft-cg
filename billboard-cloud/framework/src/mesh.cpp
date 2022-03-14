@@ -80,13 +80,19 @@ void Mesh::draw()
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(triangles.size() * 3), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
-}  
+} 
 
 void Mesh::clearMesh()
 {
     glDeleteBuffers(1, &IBO);
     glDeleteBuffers(1, &VBO);
     glDeleteVertexArrays(1, &VAO);
+}
+
+void Mesh::translate(float factor, glm::vec3 dir)
+{
+    for (auto i = 0; i < vertices.size(); ++i)
+        vertices[i].position -= factor * dir;
 }
 
 std::vector<Mesh> loadMesh(const std::filesystem::path& file, bool centerAndNormalize)

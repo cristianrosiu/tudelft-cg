@@ -10,12 +10,20 @@ layout(location = 0) out vec4 outColor;
 in vec3 fragPos; // World-space position
 in vec3 fragNormal; // World-space normal
 
+// Booleans
+layout(location = 4) uniform int project;
+layout(location = 9) uniform int projectMiss;
 
+// Normal of point
 in vec3 planePointNormal;
 
-in vec3 color;
+in vec4 color;
 
 void main()
 {
-    outColor = vec4(color, 1.0f);
+    // Discard all points that are not in MISS or VALID sets when projecting points
+    if (color.a != 1.0 && (project == 1 || projectMiss == 1))
+        discard;
+    
+    outColor = color;
 }

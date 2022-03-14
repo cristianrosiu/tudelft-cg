@@ -9,8 +9,9 @@ layout(location = 0) out vec4 outColor;
 // Interpolated output data from vertex shader.
 in vec3 fragPos; // World-space position
 in vec3 fragNormal; // World-space normal
+in vec4 color;
 
 void main()
 {
-    outColor = vec4(abs(fragNormal), 1.0);
+    outColor = color;
 }

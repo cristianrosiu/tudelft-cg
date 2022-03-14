@@ -47,6 +47,7 @@ class Mesh {
 		void draw();
 		void clearMesh();
 		void setupMesh();
+		void translate(float factor, glm::vec3 dir);
 	private:
 		//  render data
 		GLuint VAO, VBO, IBO;

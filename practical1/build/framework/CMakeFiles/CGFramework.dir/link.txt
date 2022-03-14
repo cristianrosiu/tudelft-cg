@@ -1,2 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/ar qc libCGFramework.a CMakeFiles/CGFramework.dir/src/trackball.cpp.o CMakeFiles/CGFramework.dir/src/mesh.cpp.o CMakeFiles/CGFramework.dir/src/image.cpp.o CMakeFiles/CGFramework.dir/src/shader.cpp.o CMakeFiles/CGFramework.dir/src/window.cpp.o CMakeFiles/CGFramework.dir/src/imguizmo.cpp.o CMakeFiles/CGFramework.dir/src/ImGuizmo/ImGuizmo.cpp.o
-/Library/Developer/CommandLineTools/usr/bin/ranlib libCGFramework.a
