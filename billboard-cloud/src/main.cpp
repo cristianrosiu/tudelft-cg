@@ -205,7 +205,7 @@ int main()
             if (shiftPressed)
             {
                 ALPHA += ALPHA_FACTOR;
-                std::cout << "ALPHA: " << ALPHA << std::endl;
+                //std::cout << "ALPHA: " << ALPHA << std::endl;
             }
             else {
                 planeMesh.translate(PLANE_TRANS_FACTOR, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -216,7 +216,7 @@ int main()
             if (shiftPressed) 
             {
                 ALPHA -= ALPHA_FACTOR;
-                std::cout << "ALPHA: " << ALPHA << std::endl;
+                //std::cout << "ALPHA: " << ALPHA << std::endl;
             }
             else {
                 planeMesh.translate(PLANE_TRANS_FACTOR, glm::vec3(0.0f, 0.0f, -1.0f));
@@ -243,11 +243,11 @@ int main()
         }
         else if (window.isKeyPressed(GLFW_KEY_UP)) {
             EPSILON = std::max(0.0f, std::min(EPSILON + EPSILON_FACTOR, (float)MAX_RADIUS));
-            std::cout << "EPSILON: " << EPSILON << std::endl;
+            //std::cout << "EPSILON: " << EPSILON << std::endl;
         }
         else if (window.isKeyPressed(GLFW_KEY_DOWN)) {
             EPSILON = std::max(0.0f, std::min(EPSILON - EPSILON_FACTOR, (float)MAX_RADIUS));
-            std::cout << "EPSILON: " << EPSILON << std::endl;
+            //std::cout << "EPSILON: " << EPSILON << std::endl;
         }
 
         // Clamp alpha and move the second plane
