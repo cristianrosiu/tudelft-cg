@@ -1,0 +1,223 @@
+//#include "Image.h"
+#include "include/player.h"
+#include "camera.h"
+// Always include window first (because it includes glfw, which includes GL which needs to be included AFTER glew).
+// Can't wait for modules to fix this stuff...
+#include <framework/disable_all_warnings.h>
+DISABLE_WARNINGS_PUSH()
+#include <glad/glad.h>
+// Include glad before glfw3
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/mat4x4.hpp>
+#include <imgui/imgui.h>
+DISABLE_WARNINGS_POP()
+#include <framework/shader.h>
+#include <framework/window.h>
+#include <functional>
+#include <iostream>
+#include <vector>
+
+
+class Application {
+public:
+    Application()
+        : m_window("Final Project", glm::ivec2(1024, 1024), OpenGLVersion::GL45),
+          m_camera(&m_window, glm::vec3(1.2f, 1.1f, 0.9f), -glm::vec3(1.2f, 1.1f, 0.9f))
+    {
+        m_window.registerKeyCallback([this](int key, int scancode, int action, int mods) {
+            if (action == GLFW_PRESS)
+                onKeyPressed(key, mods);
+            else if (action == GLFW_RELEASE)
+                onKeyReleased(key, mods);
+        });
+        m_window.registerMouseMoveCallback(std::bind(&Application::onMouseMove, this, std::placeholders::_1));
+        m_window.registerMouseButtonCallback([this](int button, int action, int mods) {
+            if (action == GLFW_PRESS)
+                onMouseClicked(button, mods);
+            else if (action == GLFW_RELEASE)
+                onMouseReleased(button, mods);
+        });
+
+        try {
+            ShaderBuilder defaultBuilder;
+            defaultBuilder.addStage(GL_VERTEX_SHADER, "shaders/shader_vert.glsl");
+            defaultBuilder.addStage(GL_FRAGMENT_SHADER, "shaders/shader_frag.glsl");
+            m_defaultShader = defaultBuilder.build();
+
+            m_defaultShader2 = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/shader_vert.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/shader_frag.glsl").build();
+
+            ShaderBuilder shadowBuilder;
+            shadowBuilder.addStage(GL_VERTEX_SHADER, "shaders/shadow_vert.glsl");
+            m_shadowShader = shadowBuilder.build();
+
+            // Any new shaders can be added below in similar fashion.
+            // ==> Don't forget to reconfigure CMake when you do!
+            //     Visual Studio: PROJECT => Generate Cache for ComputerGraphics
+            //     VS Code: ctrl + shift + p => CMake: Configure => enter
+            // ....
+        } catch (ShaderLoadingException e) {
+            std::cerr << e.what() << std::endl;
+        }
+    }
+
+    void update()
+    {
+        glm::vec3 pos = glm::vec3(0.f);
+
+        glm::vec3 m_forward = glm::vec3(1.f, 0.f, 0.f);
+
+        GLfloat lastFrame = (GLfloat)glfwGetTime();
+
+        GPUMesh scene{ "resources/scene.obj" };
+
+        while (!m_window.shouldClose()) {
+            glfwPollEvents();
+
+            // This is your game loop
+            // Put your real-time logic and rendering in here
+            m_window.updateInput();
+
+            // Calculate DeltaTime of current frame
+            GLfloat currentFrame = (GLfloat)glfwGetTime();
+            m_deltaTime = (currentFrame - lastFrame);
+            lastFrame = currentFrame;
+
+            // Clear the screen
+            glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            // ...
+            glEnable(GL_DEPTH_TEST);
+
+            glm::vec3 camPos = player.position() + glm::vec3(3.f, 3.f, 3.f);
+            m_viewMatrix = glm::lookAt(camPos, player.position(), glm::vec3(0., 1.f, 0.f));
+
+            const glm::mat4 mvpMatrix = m_projectionMatrix * m_viewMatrix * player.modelMatrix();
+            // Normals should be transformed differently than positions (ignoring translations + dealing with scaling):
+            // https://paroj.github.io/gltut/Illumination/Tut09%20Normal%20Transformation.html
+            const glm::mat3 normalModelMatrix = glm::inverseTranspose(glm::mat3(player.modelMatrix()));
+
+            m_defaultShader.bind();
+
+            player.move(m_deltaTime);
+
+            glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(mvpMatrix));
+            glUniformMatrix4fv(1, 1, GL_FALSE, glm::value_ptr(player.modelMatrix()));
+            glUniformMatrix3fv(2, 1, GL_FALSE, glm::value_ptr(normalModelMatrix));
+
+            player.mesh().draw();
+
+            const glm::mat4 mvpMatrix2 = m_projectionMatrix * m_viewMatrix * glm::mat4(1.f);
+            // Normals should be transformed differently than positions (ignoring translations + dealing with scaling):
+            // https://paroj.github.io/gltut/Illumination/Tut09%20Normal%20Transformation.html
+            const glm::mat3 normalModelMatrix2 = glm::inverseTranspose(glm::mat3(glm::mat4(1.f)));
+            m_defaultShader2.bind();
+            glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(mvpMatrix2));
+            glUniformMatrix4fv(1, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
+            glUniformMatrix3fv(2, 1, GL_FALSE, glm::value_ptr(normalModelMatrix2));
+
+            scene.draw();
+
+
+            
+
+
+            // Processes input and swaps the window buffer
+            m_window.swapBuffers();
+        }
+    }
+
+    // In here you can handle key presses
+    // key - Integer that corresponds to numbers in https://www.glfw.org/docs/latest/group__keys.html
+    // mods - Any modifier keys pressed, like shift or control
+    void onKeyPressed(int key, int mods)
+    {
+        switch (key)
+        {
+            case GLFW_KEY_W:
+                break;
+            case GLFW_KEY_S:
+                break;
+            case GLFW_KEY_A:
+                break;
+            case GLFW_KEY_D:
+                break;
+            default:
+                break;
+        }
+        std::cout << "Key pressed: " << key << std::endl;
+    }
+
+    // In here you can handle key releases
+    // key - Integer that corresponds to numbers in https://www.glfw.org/docs/latest/group__keys.html
+    // mods - Any modifier keys pressed, like shift or control
+    void onKeyReleased(int key, int mods)
+    {
+        switch (key)
+        {
+        case GLFW_KEY_W:
+            break;
+        case GLFW_KEY_S:
+            break;
+        case GLFW_KEY_A:
+            break;
+        case GLFW_KEY_D:
+            break;
+        default:
+            break;
+        }
+    }
+
+    // If the mouse is moved this function will be called with the x, y screen-coordinates of the mouse
+    void onMouseMove(const glm::dvec2& cursorPos)
+    {
+        std::cout << "Mouse at position: " << cursorPos.x << " " << cursorPos.y << std::endl;
+    }
+
+    // If one of the mouse buttons is pressed this function will be called
+    // button - Integer that corresponds to numbers in https://www.glfw.org/docs/latest/group__buttons.html
+    // mods - Any modifier buttons pressed
+    void onMouseClicked(int button, int mods)
+    {
+        std::cout << "Pressed mouse button: " << button << std::endl;
+    }
+
+    // If one of the mouse buttons is released this function will be called
+    // button - Integer that corresponds to numbers in https://www.glfw.org/docs/latest/group__buttons.html
+    // mods - Any modifier buttons pressed
+    void onMouseReleased(int button, int mods)
+    {
+        std::cout << "Released mouse button: " << button << std::endl;
+    }
+
+private:
+    Window m_window;
+
+    // Shader for default rendering and for depth rendering
+    Shader m_defaultShader;
+    Shader m_defaultShader2;
+    Shader m_shadowShader;
+
+    Camera m_camera;
+
+    GLfloat m_deltaTime;
+
+    Player player{ &m_window, "steve", 100, "resources/checkerboard.png", "resources/dragon.obj", glm::vec3(0.0f), glm::vec3(0.0f) };
+
+    // Projection and view matrices for you to fill in and use
+    glm::mat4 m_projectionMatrix = glm::perspective(glm::radians(80.0f), 1.0f, 0.1f, 30.0f);
+    glm::mat4 m_viewMatrix = glm::lookAt(glm::vec3(-1, 1, -1), glm::vec3(0), glm::vec3(0, 1, 0));
+    glm::mat4 m_modelMatrix { 1.0f };
+};
+
+int main()
+{
+    Application app;
+    app.update();
+
+    return 0;
+}
