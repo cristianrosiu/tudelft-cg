@@ -43,11 +43,7 @@ public:
         });
 
         try {
-            ShaderBuilder defaultBuilder;
-            defaultBuilder.addStage(GL_VERTEX_SHADER, "shaders/shader_vert.glsl");
-            defaultBuilder.addStage(GL_FRAGMENT_SHADER, "shaders/shader_frag.glsl");
-            m_defaultShader = defaultBuilder.build();
-
+            m_defaultShader = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/shader_vert.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/shader_frag.glsl").build();
             m_defaultShader2 = ShaderBuilder().addStage(GL_VERTEX_SHADER, "shaders/shader_vert.glsl").addStage(GL_FRAGMENT_SHADER, "shaders/shader_frag.glsl").build();
 
             ShaderBuilder shadowBuilder;
@@ -93,7 +89,7 @@ public:
             // ...
             glEnable(GL_DEPTH_TEST);
 
-            glm::vec3 camPos = player.position() + glm::vec3(3.f, 3.f, 3.f);
+            glm::vec3 camPos = player.position() + glm::vec3(3.f, 5.f, 3.f);
             m_viewMatrix = glm::lookAt(camPos, player.position(), glm::vec3(0., 1.f, 0.f));
 
             const glm::mat4 mvpMatrix = m_projectionMatrix * m_viewMatrix * player.modelMatrix();
@@ -121,10 +117,6 @@ public:
             glUniformMatrix3fv(2, 1, GL_FALSE, glm::value_ptr(normalModelMatrix2));
 
             scene.draw();
-
-
-            
-
 
             // Processes input and swaps the window buffer
             m_window.swapBuffers();
@@ -175,7 +167,36 @@ public:
     // If the mouse is moved this function will be called with the x, y screen-coordinates of the mouse
     void onMouseMove(const glm::dvec2& cursorPos)
     {
-        std::cout << "Mouse at position: " << cursorPos.x << " " << cursorPos.y << std::endl;
+        double x = cursorPos.x;
+        double y = cursorPos.y;
+
+        x = (2.0f * x) / m_window.getWindowSize().x - 1.0f;
+        y = 1.0f - (2.0f * y) / m_window.getWindowSize().y;
+
+        glm::vec4 ray_clip = glm::vec4(x, y, -1.0, 1.0);
+        glm::vec4 ray_eye = glm::inverse(m_projectionMatrix) * ray_clip;
+        ray_eye = glm::vec4(ray_eye.x, ray_eye.y, -1.0f, 1.0f);
+
+        glm::vec3 ray_wor = glm::vec3((glm::inverse(m_viewMatrix) * ray_eye));
+        // don't forget to normalise the vector at some point
+        ray_wor = glm::normalize(ray_wor);
+
+        float denom = glm::dot(glm::vec3(0.f, 1.f, 0.f), ray_wor);
+        std::cout << (glm::vec3(ray_eye / ray_eye.w) + ray_wor * 20.f).x << (glm::vec3(ray_eye / ray_eye.w) + ray_wor * 20.f).y << (glm::vec3(ray_eye / ray_eye.w) + ray_wor * 20.f).z << "\n";
+       
+        player.rotate(glm::vec3(ray_eye / ray_eye.w));
+        
+        
+        if (denom > 1e-6)
+        {
+            glm::vec3 p0l0 = glm::vec3(0.f) - glm::vec3(ray_eye / ray_eye.w);
+            float t = glm::dot(p0l0, glm::vec3(0.f, 1.f, 0.f)) / denom;
+             
+        }
+
+        
+        
+        //std::cout << "Mouse at position: " << cursorPos.x << " " << cursorPos.y << std::endl;
     }
 
     // If one of the mouse buttons is pressed this function will be called
@@ -183,7 +204,8 @@ public:
     // mods - Any modifier buttons pressed
     void onMouseClicked(int button, int mods)
     {
-        std::cout << "Pressed mouse button: " << button << std::endl;
+
+        
     }
 
     // If one of the mouse buttons is released this function will be called

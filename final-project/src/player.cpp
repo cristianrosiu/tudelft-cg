@@ -31,10 +31,18 @@ glm::vec3 Player::rotation()
 void Player::move(float deltaTime)
 {
     updateInput();
-    glm::vec3 velocity = glm::vec3(0.f, 0.f, verticalInput * RUN_SPEED * deltaTime);
+    glm::vec3 velocity = glm::vec3(horizontalInput * RUN_SPEED * deltaTime, 0.f, verticalInput * RUN_SPEED * deltaTime);
     d_modelMatrix = glm::translate(d_modelMatrix, velocity);
-    d_modelMatrix = glm::rotate(d_modelMatrix, glm::radians(horizontalInput * TURN_SPEED * deltaTime), glm::vec3(0.f, 1.f, 0.f));
+    //d_modelMatrix = glm::rotate(d_modelMatrix, glm::radians(horizontalInput * TURN_SPEED * deltaTime), glm::vec3(0.f, 1.f, 0.f));
 }
+
+void Player::rotate(glm::vec3 lookPoint)
+{
+    updateInput();
+    d_modelMatrix = d_modelMatrix*glm::lookAt(d_position, glm::vec3(lookPoint.x, d_position.y, lookPoint.z), glm::vec3(0.f, 1.f, 0.f));
+    //d_modelMatrix = glm::rotate(d_modelMatrix, glm::radians(horizontalInput * TURN_SPEED * deltaTime), glm::vec3(0.f, 1.f, 0.f));
+}
+
 
 void Player::updateInput()
 {
@@ -46,9 +54,9 @@ void Player::updateInput()
         verticalInput = 0;
     
     if (d_window->isKeyPressed(GLFW_KEY_A))
-        horizontalInput = 1;
-    else if (d_window->isKeyPressed(GLFW_KEY_D))
         horizontalInput = -1;
+    else if (d_window->isKeyPressed(GLFW_KEY_D))
+        horizontalInput = 1;
     else
         horizontalInput = 0;
 }

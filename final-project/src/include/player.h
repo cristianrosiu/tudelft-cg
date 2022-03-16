@@ -24,6 +24,7 @@ public:
            glm::vec3 const& rotation);
    
     void move(float deltaTime);
+    void rotate(glm::vec3 lookPoint);
     void updateInput();
 
     glm::mat4 modelMatrix();
