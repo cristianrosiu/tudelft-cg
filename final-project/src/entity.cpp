@@ -8,7 +8,7 @@ Entity::Entity(std::string const &name, int const &health,
 :
 	d_name(name),
 	d_health(health),
-	//d_texture(texture),
+	d_texture(texture),
 	d_mesh(mesh),
 	d_position(position),
 	d_rotation(rotation)
@@ -22,14 +22,6 @@ void Entity::setName(std::string const &name)
 void Entity::setHealth(int const &modifier)
 {
 	d_health = std::max(0, d_health + modifier);
-}
-void Entity::increasePosition(glm::vec3 const &v)
-{
-	d_position += v;
-}
-void Entity::increaseRotation(glm::vec3 const &v)
-{
-	d_rotation += v;
 }
 
 // Getters
@@ -45,13 +37,17 @@ GPUMesh &Entity::mesh()
 {
 	return d_mesh;
 }
-/*Texture& Entity::texture()
+Texture& Entity::texture()
 {
 	return d_texture;
-}*/
+}
 glm::vec3 const &Entity::position() const
 {
 	return d_position;
+}
+glm::vec3 const& Entity::forward() const
+{
+	return d_forward;
 }
 glm::vec3 const &Entity::rotation() const
 {

@@ -29,8 +29,7 @@ struct Light {
 class Application {
 public:
     Application()
-        : m_window("Final Project", glm::ivec2(1024, 1024), OpenGLVersion::GL45),
-          m_camera(&m_window, glm::vec3(1.2f, 1.1f, 0.9f), -glm::vec3(1.2f, 1.1f, 0.9f))
+        : m_window("Final Project", glm::ivec2(1024, 1024), OpenGLVersion::GL45)
     {
         m_window.registerKeyCallback([this](int key, int scancode, int action, int mods) {
             if (action == GLFW_PRESS)
@@ -108,6 +107,12 @@ public:
             m_deltaTime = (currentFrame - lastFrame);
             lastFrame = currentFrame;
 
+            // Update camera position
+
+            m_camera.updatePosition();
+            m_viewMatrix = m_camera.viewMatrix();
+
+            // Update player movement
             player.move(m_deltaTime);
             player.rotate(m_deltaTime);
 
@@ -125,21 +130,14 @@ public:
 
                 // Set viewport size
                 glViewport(0, 0, SHADOWTEX_WIDTH, SHADOWTEX_HEIGHT);
+
                 
-                const glm::mat3 normalModelMatrix = glm::inverseTranspose(glm::mat3(player.modelMatrix()));
-                glUniformMatrix4fv(1, 1, GL_FALSE, glm::value_ptr(player.modelMatrix()));
-                glUniformMatrix3fv(2, 1, GL_FALSE, glm::value_ptr(normalModelMatrix));
-
-                // .... HERE YOU MUST ADD THE CORRECT UNIFORMS FOR RENDERING THE SHADOW MAP
-                const glm::mat4 lightMVP = m_projectionMatrix * m_viewMatrix;
-                glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(lightMVP));
-
+                configureUniforms();
                 player.mesh().draw();
 
                 // Unbind the off-screen framebuffer
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
-
 
             // Clear the screen
             //glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
@@ -147,53 +145,21 @@ public:
 
             // ...
             //glEnable(GL_DEPTH_TEST);
-
-            glm::vec3 camPos = player.position() - player.d_forward * 5.f + glm::vec3(0.f, 3.f, 0.f);
-            m_viewMatrix = glm::lookAt(camPos, player.position(), glm::vec3(0.f, 1.f, 0.f));
-
-            const glm::mat4 mvpMatrix = m_projectionMatrix * m_viewMatrix * player.modelMatrix();
+       
             // Normals should be transformed differently than positions (ignoring translations + dealing with scaling):
             // https://paroj.github.io/gltut/Illumination/Tut09%20Normal%20Transformation.html
-            const glm::mat3 normalModelMatrix = glm::inverseTranspose(glm::mat3(player.modelMatrix()));
+            //const glm::mat3 normalModelMatrix = glm::inverseTranspose(glm::mat3(player.modelMatrix()));
 
+            // Draw player
             m_defaultShader.bind();
-
-            glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(mvpMatrix));
-            glUniformMatrix4fv(1, 1, GL_FALSE, glm::value_ptr(player.modelMatrix()));
-            glUniformMatrix3fv(2, 1, GL_FALSE, glm::value_ptr(normalModelMatrix));
-            // .... HERE YOU MUST ADD THE CORRECT UNIFORMS FOR RENDERING THE SHADOW MAP
-            const glm::mat4 lightMVP = m_projectionMatrix * m_viewMatrix;
-            glUniformMatrix4fv(3, 1, GL_FALSE, glm::value_ptr(lightMVP));
-            glUniform3fv(4, 1, glm::value_ptr(m_light.position));
-            glUniform3fv(5, 1, glm::value_ptr(m_light.color));
-            glUniform3fv(6, 1, glm::value_ptr(glm::vec3(.5f)));
-            glUniform3fv(7, 1, glm::value_ptr(camPos));
-
-
+            m_modelMatrix = player.modelMatrix();
+            configureUniforms();
             player.mesh().draw();
 
-
-            const glm::mat4 mvpMatrix2 = m_projectionMatrix * m_viewMatrix * glm::mat4(1.f);
-            // Normals should be transformed differently than positions (ignoring translations + dealing with scaling):
-            // https://paroj.github.io/gltut/Illumination/Tut09%20Normal%20Transformation.html
-            const glm::mat3 normalModelMatrix2 = glm::inverseTranspose(glm::mat3(glm::mat4(1.f)));
-
-            
-
+            // Draw Environment
             m_defaultShader2.bind();
-           
-            glUniformMatrix4fv(3, 1, GL_FALSE, glm::value_ptr(lightMVP));
-            glUniform3fv(4, 1, glm::value_ptr(m_light.position));
-            glUniform3fv(5, 1, glm::value_ptr(m_light.color));
-            glUniform3fv(6, 1, glm::value_ptr(glm::vec3(.5f)));
-            glUniform3fv(7, 1, glm::value_ptr(camPos));
-            glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(mvpMatrix2));
-            glUniformMatrix4fv(1, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
-            glUniformMatrix3fv(2, 1, GL_FALSE, glm::value_ptr(normalModelMatrix2));
-           
-            
-            
-
+            m_modelMatrix = glm::mat4(1.f);
+            configureUniforms();
             scene.draw();
 
             // Processes input and swaps the window buffer
@@ -344,6 +310,14 @@ public:
         std::cout << "Released mouse button: " << button << std::endl;
     }
 
+    void configureUniforms()
+    {
+        const glm::mat4 mvpMatrix = m_projectionMatrix * m_viewMatrix * m_modelMatrix;
+        glUniformMatrix4fv(1, 1, GL_FALSE, glm::value_ptr(m_modelMatrix));
+
+        const glm::mat4 lightMVP = m_projectionMatrix * m_viewMatrix * m_modelMatrix;
+        glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(lightMVP));
+    }
 private:
     Window m_window;
 
@@ -352,7 +326,7 @@ private:
     Shader m_defaultShader2;
     Shader m_shadowShader;
 
-    Camera m_camera;
+    Camera m_camera{&m_window, &player};
 
     Light m_light;
 

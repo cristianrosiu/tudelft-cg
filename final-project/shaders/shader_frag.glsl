@@ -2,15 +2,10 @@
 
 // Global variables for lighting calculations.
 //layout(location = 1) uniform vec3 viewPos;
+
 layout(location = 2) uniform sampler2D texShadow;
-
 layout(location = 3) uniform mat4 lightMVP;
-
-// Phong uniforms 
-layout(location = 4) uniform vec3 lightPos;
-layout(location = 5) uniform vec3 lightColor;
-layout(location = 6) uniform vec3 objectColor;
-layout(location = 7) uniform vec3 cameraPos;
+layout(location = 4) uniform vec3 cameraPos;
 
 // Output for on-screen color.
 layout(location = 0) out vec4 outColor;
@@ -113,7 +108,6 @@ void main()
     IA = ka * lightColor * objectColor;
     ID = kd * lightColor * dot(N, L); 
     IR = ks * pow(dot(N,H), shininess);
-
 
     outColor = vec4(vec3(max(ID + IR, 0.0))*(1.0 - lightFactor)*pow(intensity, 1.0), 1.0);
 }
