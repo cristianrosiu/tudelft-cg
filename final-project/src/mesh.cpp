@@ -58,6 +58,7 @@ void GPUMesh::setupMesh()
 
     // Each triangle has 3 vertices.
     d_numIndices = static_cast<GLsizei>(3 * d_triangles.size());
+
 }
 
 GPUMesh::GPUMesh(GPUMesh&& other)

@@ -7,7 +7,7 @@
 class Entity {
 protected:
     GPUMesh d_mesh;         // mesh of entity
-    Texture d_texture;      // texture of entity
+    //Texture d_texture;      // texture of entity
     int d_health;           // health of entity
     std::string d_name;     // entity name
     glm::vec3 d_position;   // current entity position
@@ -31,5 +31,5 @@ public:
     std::string const &name()   const;
     int const &health()         const;
     GPUMesh &mesh();
-    Texture &texture();
+    //Texture &texture();
 };

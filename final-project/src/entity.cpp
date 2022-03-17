@@ -8,7 +8,7 @@ Entity::Entity(std::string const &name, int const &health,
 :
 	d_name(name),
 	d_health(health),
-	d_texture(texture),
+	//d_texture(texture),
 	d_mesh(mesh),
 	d_position(position),
 	d_rotation(rotation)
@@ -45,10 +45,10 @@ GPUMesh &Entity::mesh()
 {
 	return d_mesh;
 }
-Texture& Entity::texture()
+/*Texture& Entity::texture()
 {
 	return d_texture;
-}
+}*/
 glm::vec3 const &Entity::position() const
 {
 	return d_position;
