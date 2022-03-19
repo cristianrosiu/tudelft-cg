@@ -11,8 +11,7 @@ struct MeshLoadingException : public std::runtime_error {
 };
 
 class GPUMesh {
-    std::vector<Vertex> d_vertices;
-    std::vector <glm::uvec3> d_triangles;
+
     GLsizei d_numIndices{ 0 };
     bool d_hasTextureCoords{ false };
     static constexpr GLuint INVALID = 0xFFFFFFFF;
@@ -33,9 +32,13 @@ public:
 
     bool hasTextureCoords() const;
 
+    std::vector<Vertex> d_vertices;
+    std::vector <glm::uvec3> d_triangles;
+
     // Bind VAO and call glDrawElements.
     void draw();
     void setupMesh();
+    void bindMesh();
 
 private:
     void moveInto(GPUMesh&&);

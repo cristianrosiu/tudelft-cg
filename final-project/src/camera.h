@@ -6,12 +6,12 @@ DISABLE_WARNINGS_PUSH()
 #include <glm/vec3.hpp>
 DISABLE_WARNINGS_POP()
 #include <framework/window.h>
-#include "include/entity.h"
+#include "include/player.h"
 
 class Camera {
 public:
-    Camera(Window* pWindow, Entity *entity);
-    Camera(Window* pWindow, const glm::vec3& position, const glm::vec3& forward, Entity *entity);
+    Camera(Window* pWindow, Player *entity);
+    Camera(Window* pWindow, const glm::vec3& position, const glm::vec3& forward, Player *entity);
 
     void updateInput();
     void setUserInteraction(bool enabled);
@@ -33,7 +33,7 @@ private:
     float d_distance{ 5.f };
 
     const Window* m_pWindow;
-    const Entity* m_entity;
+    const Player* m_entity;
 
     bool m_userInteraction { true };
     glm::dvec2 m_prevCursorPos { 0 };

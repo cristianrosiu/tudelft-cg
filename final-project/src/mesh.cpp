@@ -82,11 +82,16 @@ bool GPUMesh::hasTextureCoords() const
     return d_hasTextureCoords;
 }
 
+void GPUMesh::bindMesh()
+{
+
+}
+
 void GPUMesh::draw()
 {
     glBindVertexArray(d_vao);
     glDrawElements(GL_TRIANGLES, d_numIndices, GL_UNSIGNED_INT, nullptr);
-    glBindVertexArray(0);
+    //glBindVertexArray(0);
 }   
 
 void GPUMesh::moveInto(GPUMesh&& other)

@@ -21,9 +21,9 @@ public:
     Texture& operator=(const Texture&) = delete;
     Texture& operator=(Texture&&) = default;
 
-    void bind(GLint textureSlot);
+    void bind(GLint textureSlot, GLint active);
 
 private:
     static constexpr GLuint INVALID = 0xFFFFFFFF;
-    GLuint m_texture { INVALID };
+    GLuint m_texture{ INVALID };
 };

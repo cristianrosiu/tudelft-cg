@@ -5,14 +5,15 @@ DISABLE_WARNINGS_PUSH()
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <iostream>
 DISABLE_WARNINGS_POP()
 
-Camera::Camera(Window* pWindow, Entity* entity)
+Camera::Camera(Window* pWindow, Player* entity)
     : Camera(pWindow, glm::vec3(0), glm::vec3(0, 0, -1), entity)
 {
 }
 
-Camera::Camera(Window* pWindow, const glm::vec3& pos, const glm::vec3& forward, Entity* entity)
+Camera::Camera(Window* pWindow, const glm::vec3& pos, const glm::vec3& forward, Player* entity)
     : m_position(pos)
     , m_forward(glm::normalize(forward))
     , m_pWindow(pWindow)
@@ -27,6 +28,7 @@ void Camera::setUserInteraction(bool enabled)
 
 void Camera::updatePosition()
 {
+
     m_position = m_entity->position() - m_entity->forward() * d_distance + glm::vec3(0.f, 3.f, 0.f);;
 }
 

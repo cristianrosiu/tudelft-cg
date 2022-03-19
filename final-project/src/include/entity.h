@@ -8,14 +8,14 @@
 #define Entity_H
 class Entity {
 protected:
-    GPUMesh d_mesh;         // mesh of entity
-    Texture d_texture;      // texture of entity
+    std::vector<GPUMesh> d_meshs;         // mesh of entity
+    Texture d_texture {"resources/checkerboard.png"};      // texture of entity
     int d_health {100};           // health of entity
     std::string d_name {"Steve"};     // entity name
     glm::vec3 d_position { 0.f };   // current entity position
     glm::vec3 d_rotation { 0.f };   // current entity rotation
     glm::vec3 d_forward{ 0, 0, -1 };
-    glm::vec3 d_up{ 0, 1, 0 };
+    glm::vec3 d_up{ 0.f, 1.f, 0.f };
 
 public:
     Entity(std::string const &name,
@@ -33,7 +33,7 @@ public:
     glm::vec3 const& forward()  const;
     std::string const &name()   const;
     int const &health()         const;
-    GPUMesh &mesh();
+    GPUMesh &mesh(int const& index);
     Texture &texture();
 };
 
