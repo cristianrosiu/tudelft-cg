@@ -282,14 +282,20 @@ public:
         struct Node* arm3 = new struct Node();
         arm3->translationMatrix = glm::translate(arm3->translationMatrix, glm::vec3(0.f, 0.f, -1.f));
 
+        struct Node* arm4 = new struct Node();
+        arm4->translationMatrix = glm::translate(arm4->translationMatrix, glm::vec3(0.f, 0.f, -1.f));
+
         rootArm->next_level = arm2;
         rootArm->next_object = NULL;
 
         arm2->next_level = arm3;
         arm2->next_object = NULL;
 
-        arm3->next_level = NULL;
+        arm3->next_level = arm4;
         arm3->next_object = NULL;
+
+        arm4->next_level = NULL;
+        arm4->next_object = NULL;
     }
 
     void updateBoss()
@@ -299,11 +305,16 @@ public:
         m_bossModelMatrix = glm::mat4(1.f);
         updateGradient(rootArm, lastPos);
         updateJacobian();
-        glm::vec3 targetPos = glm::normalize(player.position() - lastPos);
-        glm::vec2 angles = glm::transpose(m_jacobian) * (glm::vec2(targetPos.x, targetPos.z) * 0.1f);
-        angleStack.push(angles.x);
-        angleStack.push(angles.y);
-        m_bossModelMatrix = glm::mat4(1.f);
+        glm::vec3 targetPos = player.position() - lastPos;
+
+        if (glm::distance(player.position(), lastPos) > 0.001f)
+        {
+            glm::vec3 angles = glm::transpose(m_jacobian) * (targetPos * 0.1f);
+            angleStack.push(angles.x);
+            angleStack.push(angles.y);
+            angleStack.push(angles.z);
+            m_bossModelMatrix = glm::mat4(1.f);
+        }
         render_object(rootArm);
     }
 
@@ -315,11 +326,15 @@ public:
 
         glm::vec3 dm1 = m_jacobianStack.front();
         m_jacobianStack.pop();
+
+        glm::vec3 dm2 = m_jacobianStack.front();
+        m_jacobianStack.pop();
         //std::cout << glm::to_string(dm1) << "\n\n";
    
         m_jacobian = {
-        dm0.x, dm1.x,
-        dm0.z, dm1.z
+            dm0.x, dm1.x, dm2.x, 
+            dm0.y, dm1.y, dm2.y,
+            dm0.z, dm0.z, dm2.z
         };
     }
 
@@ -391,13 +406,14 @@ public:
 
             if (curr_object->next_level != NULL)
             {
-                std::cout << angleStack.front() << "\n";
-                curr_object->rotationMatrix = glm::rotate(curr_object->rotationMatrix, angleStack.front(), glm::vec3(0.f, 1.f, 0.f));
-                angleStack.pop();
+                if (angleStack.front() != NULL)
+                {
+                    curr_object->rotationMatrix = glm::rotate(curr_object->rotationMatrix, angleStack.front(), glm::vec3(0.f, 1.f, 0.f));
+                    angleStack.pop();
+                }
             }
             m_bossModelMatrix = m_bossModelMatrix * curr_object->translationMatrix * curr_object->rotationMatrix;
 
-          
             /* Draw object. */
             // TODO: add type of object so you can draw multiples meshes
             m_modelMatrix = m_bossModelMatrix;
@@ -438,7 +454,7 @@ private:
     glm::mat4 m_projectionMatrix = glm::perspective(glm::radians(80.0f), 1.0f, 0.1f, 30.0f);
     glm::mat4 m_viewMatrix = glm::lookAt(glm::vec3(-1, 1, -1), glm::vec3(0), glm::vec3(0, 1, 0));
     glm::mat4 m_modelMatrix { 1.0f };
-    glm::mat2 m_jacobian{ 1.f };
+    glm::mat3x3 m_jacobian{ 1.f };
 
     glm::mat4 m_bossModelMatrix{ 1.0f };
     glm::vec3 lastPos{ 0.f };
