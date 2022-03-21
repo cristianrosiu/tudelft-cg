@@ -5,6 +5,7 @@ layout(location = 5) uniform mat4 lightMVP;
 layout(location = 6) uniform sampler2D texShadow;
 layout(location = 7) uniform vec3 lightPos;
 layout(location = 8) uniform vec3 camPos;
+layout(location = 9) uniform sampler2D sMap;
 
 in vec3 fragPos;
 in vec3 fragNormal;
@@ -97,10 +98,10 @@ void main()
 
         // Specular
         vec3 viewDir = normalize(camPos - fragPos);
-        float spec = 2.0;
+        float spec = 0.0;
         vec3 halfwayDir = normalize(lightDir + viewDir);
         spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
-        vec3 specular = spec * lightColor;
+        vec3 specular = lightColor * (spec * texture(sMap, fragTexCoord).rgb); //spec * lightColor;
 
         vec3 lighting = ambient + (1.0 - shadow) * pow(intensity, 2.0) * (diffuse + specular);    
 

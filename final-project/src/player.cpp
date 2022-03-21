@@ -5,10 +5,11 @@
 Player::Player(Window* window,
     std::string const& name, int const& health,
     std::filesystem::path const& texture,
+    std::filesystem::path const& sTexture,
     std::filesystem::path const& mesh,
     glm::vec3 const& position, glm::vec3 const& rotation)
     :
-    Entity(name, health, texture, mesh, position, rotation),
+    Entity(name, health, texture, sTexture, mesh, position, rotation),
     d_window(window)
 {}
 
@@ -37,11 +38,11 @@ void Player::lookAt(glm::vec3 const& lookPoint)
 
     glm::vec3 viewForward = glm::normalize(targetPos - curentPos);
 
-    float cosa = glm::dot(d_forward, viewForward);
+    //float cosa = glm::dot(d_forward, viewForward);
     float angle = std::atan2f(viewForward.z, viewForward.x);
 
     d_rotationMatrix = glm::rotate(glm::mat4(1.f), glm::radians(90.f), d_up) * glm::rotate(glm::mat4(1.f), angle, d_up);
-    d_forward = glm::vec3(glm::normalize(d_rotationMatrix * glm::vec4(d_forward, 1.f)));
+    //d_forward = glm::vec3(glm::normalize(d_rotationMatrix * glm::vec4(d_forward, 1.f)));
 }
 
 void Player::updateInput()

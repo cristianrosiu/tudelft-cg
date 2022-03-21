@@ -10,6 +10,7 @@ class Entity {
 protected:
     std::vector<GPUMesh> d_meshs;         // mesh of entity
     Texture d_texture {"resources/checkerboard.png"};      // texture of entity
+    Texture d_sTexture{ "resources/checkerboard.png" };
     int d_health {100};           // health of entity
     std::string d_name {"Steve"};     // entity name
     glm::vec3 d_position { 0.f };   // current entity position
@@ -21,6 +22,7 @@ public:
     Entity(std::string const &name,
            int const &health,
            std::filesystem::path const &texture,
+           std::filesystem::path const &sTexture,
            std::filesystem::path const &mesh,
            glm::vec3 const &position,
            glm::vec3 const &rotation);
@@ -35,6 +37,7 @@ public:
     int const &health()         const;
     GPUMesh &mesh(int const& index);
     Texture &texture();
+    Texture& sTexture();
 };
 
 #endif

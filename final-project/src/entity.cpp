@@ -4,12 +4,14 @@
 
 Entity::Entity(std::string const &name, int const &health, 
 			   std::filesystem::path const& texture,
+			   std::filesystem::path const& sTexture,
 	           std::filesystem::path const& mesh, 
 	           glm::vec3 const& position, glm::vec3 const& rotation)
 :
 	d_name(name),
 	d_health(health),
 	d_texture(texture),
+	d_sTexture(sTexture),
 	d_position(position),
 	d_rotation(rotation)
 {
@@ -50,6 +52,10 @@ GPUMesh &Entity::mesh(int const &index)
 Texture& Entity::texture()
 {
 	return d_texture;
+}
+Texture& Entity::sTexture()
+{
+	return d_sTexture;
 }
 glm::vec3 const &Entity::position() const
 {

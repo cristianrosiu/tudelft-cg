@@ -16,6 +16,7 @@ DISABLE_WARNINGS_PUSH()
 #include <glm/mat4x4.hpp>
 #include "glm/gtx/string_cast.hpp"
 #include <imgui/imgui.h>
+#include <stdlib.h> 
 
 DISABLE_WARNINGS_POP()
 #include <framework/shader.h>
@@ -99,12 +100,34 @@ public:
 
         int index = 0;
         createBossTree();
+        int dummyInteger = 0;
         while (!m_window.shouldClose()) {
-
+            // if (player.health() <= 0)
+            //     onGameOver();
+            
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
             m_window.updateInput();
+            
+            // Use ImGui for easy input/output of ints, floats, strings, etc...
+            ImGui::Begin("Player Stats");
+            ImGui::Text("Player Health: %i", player.health()); // Use C printf fImGui::Begin("Window");ormatting rules (%i is a signed integer)
+            ImGui::End();
 
+            ImGui::Begin("Boss Stats");
+            ImGui::Text("Boss Health: %i", bossHealth); // Use C printf fImGui::Begin("Window");ormatting rules (%i is a signed integer)
+            ImGui::End();
+
+            // Boss logic
+            getLastPos(rootArm);
+            auto distanceFromPlayer = glm::distance(player.position(), lastPos);
+            if (distanceFromPlayer < 3.f)
+            {
+                srand(time(NULL));
+                int chance = rand()%2;
+                player.setHealth(-1.f*chance);
+            }
+            
             if (player.isMoving)
             {
                 index++;
@@ -114,7 +137,7 @@ public:
             {
                 index = 0;
             }
-
+            
             // === Stub code for you to fill in order to render the shadow map ===
             {
                 // Bind the off-screen framebuffer
@@ -174,13 +197,14 @@ public:
             player.lookAt(picker.getRayPoint(m_camPos, glm::vec3(0.f), glm::normalize(glm::vec3(0.f, 1.f, 0.f))));
 
             // Bind Scene Textures
-            m_texture.bind(1, GL_TRUE);
+            m_texture.bind(1, GL_TRUE, 3);
             m_modelMatrix = glm::mat4(1.f);
             configureUniforms();
             scene.draw();
 
             // Bind Player Textures
-            player.texture().bind(2, GL_TRUE);
+            player.texture().bind(2, GL_TRUE, 3);
+            player.sTexture().bind(3, GL_TRUE, 9);
             m_modelMatrix = player.modelMatrix();
             configureUniforms();
             player.mesh(index).draw();
@@ -246,7 +270,15 @@ public:
     // mods - Any modifier buttons pressed
     void onMouseClicked(int button, int mods)
     {
-
+        switch (button)
+        {
+            case GLFW_MOUSE_BUTTON_1:
+                getLastPos(rootArm);
+                float  distanceFromPlayer = glm::distance(player.position(), lastPos);
+                if (distanceFromPlayer < 3.f)
+                    bossHealth -= 10.f;
+                break;
+        }
         
     }
 
@@ -304,21 +336,43 @@ public:
         getLastPos(rootArm);
         m_bossModelMatrix = glm::mat4(1.f);
         updateGradient(rootArm, lastPos);
-        updateJacobian();
         glm::vec3 targetPos = player.position() - lastPos;
+        float distance = glm::distance(player.position(), lastPos); 
 
-        if (glm::distance(player.position(), lastPos) > 0.001f)
+        glm::vec3 viewForward = glm::normalize(targetPos);
+        float angle = std::atan2f(viewForward.x, viewForward.z);
+
+        if (distance > 5.0f)
         {
-            glm::vec3 angles = glm::transpose(m_jacobian) * (targetPos * 0.1f);
+            updateJacobian(1);
+            glm::vec3 angles = glm::transpose(m_jacobian3x3) * (glm::normalize(targetPos) * 0.1f);
             angleStack.push(angles.x);
             angleStack.push(angles.y);
             angleStack.push(angles.z);
+            angleStack.push(0.0f);
             m_bossModelMatrix = glm::mat4(1.f);
         }
+        else if (distance > 3.0f && distance < 5.0f) {
+            updateJacobian(0);
+            glm::vec2 angles = glm::transpose(m_jacobian2x2) * glm::vec2(glm::normalize(targetPos).x * 0.1f, glm::normalize(targetPos).z * 0.1f);
+            angleStack.push(0.0f);
+            angleStack.push(angles.x);
+            angleStack.push(angles.y);
+            angleStack.push(angle);
+            m_bossModelMatrix = glm::mat4(1.f);
+        }
+        else {
+            angleStack.push(0.0f);
+            angleStack.push(0.0f);
+            angleStack.push(0.0f);
+            angleStack.push(angle);
+        }
+        m_bossModelMatrix = glm::mat4(1.f);
         render_object(rootArm);
+        //rotateHead(rootArm);
     }
 
-    void updateJacobian()
+    void updateJacobian(int stage)
     {
         glm::vec3 dm0 = m_jacobianStack.front();
         m_jacobianStack.pop();
@@ -331,11 +385,20 @@ public:
         m_jacobianStack.pop();
         //std::cout << glm::to_string(dm1) << "\n\n";
    
-        m_jacobian = {
-            dm0.x, dm1.x, dm2.x, 
+        if (stage == 1) {
+            m_jacobian3x3 = {
+            dm0.x, dm1.x, dm2.x,
             dm0.y, dm1.y, dm2.y,
             dm0.z, dm0.z, dm2.z
-        };
+            };
+        }
+        else {
+            m_jacobian2x2 = {
+            dm1.x, dm2.x,
+            dm1.y, dm2.y,
+            };
+        }
+        
     }
 
     void getLastPos(struct Node* curr_object)
@@ -349,6 +412,42 @@ public:
 
             if (curr_object->next_level == NULL)
                 lastPos =  m_bossModelMatrix * glm::vec4(0.f, 0.f, 0.f, 1.f);
+
+            /* Draw object. */
+            // TODO: add type of object so you can draw multiples meshes
+
+            /* Render next object lower in the hierarchy. */
+            getLastPos(curr_object->next_level);
+
+            /* Restore transformation matrix. */
+            m_bossModelMatrix = m_matrixStack.top();
+            m_matrixStack.pop();
+
+            /* Render next object at same level in the hierarchy. */
+            getLastPos(curr_object->next_object);
+        }
+    }
+
+    void rotateHead(struct Node* curr_object)
+    {
+        if (curr_object != NULL) {
+            /* Push matrix to stack so we can come back. */
+            /* Transformations for this object. */
+            m_matrixStack.push(m_bossModelMatrix);
+    
+
+            if (curr_object->next_level == NULL) {
+                // glm::vec3 viewForward = glm::normalize(player.position() - lastPos);
+                // float angle = std::atan2f(viewForward.z, viewForward.x);
+ 
+                // curr_object->rotationMatrix = glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f)) * glm::rotate(glm::mat4(1.f), angle, glm::vec3(0.f, 1.f, 0.f));
+                curr_object->translationMatrix = glm::translate(curr_object->translationMatrix, glm::vec3(0.f, 0.f, -1.f));
+            }
+
+            m_bossModelMatrix = m_bossModelMatrix * curr_object->translationMatrix * curr_object->rotationMatrix;
+            
+            if (curr_object->next_level == NULL)
+                lastPos = m_bossModelMatrix * glm::vec4(0.f, 0.f, 0.f, 1.f);
 
             /* Draw object. */
             // TODO: add type of object so you can draw multiples meshes
@@ -396,6 +495,7 @@ public:
         }
     }
 
+
     /* Render model by recursively traversing the tree (or DAG) structure. */
     void render_object(struct Node* curr_object)
     {
@@ -404,19 +504,31 @@ public:
             /* Transformations for this object. */
             m_matrixStack.push(m_bossModelMatrix);
 
-            if (curr_object->next_level != NULL)
-            {
-                if (angleStack.front() != NULL)
-                {
-                    curr_object->rotationMatrix = glm::rotate(curr_object->rotationMatrix, angleStack.front(), glm::vec3(0.f, 1.f, 0.f));
-                    angleStack.pop();
-                }
+            if (curr_object->next_level != NULL) {
+                curr_object->rotationMatrix = glm::rotate(curr_object->rotationMatrix, angleStack.front(), glm::vec3(0.f, 1.f, 0.f));
+                m_bossModelMatrix = m_bossModelMatrix * curr_object->translationMatrix * curr_object->rotationMatrix;
+                m_modelMatrix = m_bossModelMatrix;
             }
-            m_bossModelMatrix = m_bossModelMatrix * curr_object->translationMatrix * curr_object->rotationMatrix;
+                
+            else {
+                curr_object->rotationMatrix = glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f)) * glm::rotate(glm::mat4(1.f), angleStack.front(), glm::vec3(0.f, 1.f, 0.f));
+                m_bossModelMatrix = m_bossModelMatrix * curr_object->translationMatrix * curr_object->rotationMatrix;
+                m_modelMatrix = glm::translate(glm::mat4(1.f), lastPos) * glm::rotate(glm::mat4(1.f), angleStack.front() + glm::radians(180.f), glm::vec3(0.f, 1.f, 0.f));
+            }
+               
+            angleStack.pop();
+            /*else {
+                glm::vec3 lastPos = m_bossModelMatrix * curr_object->translationMatrix * curr_object->rotationMatrix * glm::vec4(glm::vec3(0.f), 1.f);
+                glm::vec3 viewForward = glm::normalize(player.position() - lastPos);
+                float angle = std::atan2f(viewForward.z, viewForward.x);
+
+                curr_object->rotationMatrix = glm::rotate(glm::mat4(1.f), glm::radians(-90.f), glm::vec3(0.f, 1.f, 0.f)) * glm::rotate(glm::mat4(1.f), angle, glm::vec3(0.f, 1.f, 0.f));
+            }*/
+            //m_bossModelMatrix = m_bossModelMatrix * curr_object->translationMatrix * curr_object->rotationMatrix;
 
             /* Draw object. */
             // TODO: add type of object so you can draw multiples meshes
-            m_modelMatrix = m_bossModelMatrix;
+            //m_modelMatrix = m_bossModelMatrix;
             configureUniforms();
             m_arm.draw();
 
@@ -431,6 +543,12 @@ public:
             render_object(curr_object->next_object);
         }
     }
+
+    // void onGameOver()
+    // {
+    //     gameOverPanel();
+        
+    // }
 private:
     Window m_window;
 
@@ -443,18 +561,23 @@ private:
 
     GLfloat m_deltaTime;
 
-    Player player{ &m_window, "steve", 100, "resources/yellow.png", "resources/animation", glm::vec3(0.0f), glm::vec3(0.0f) };
+    Player player{ &m_window, "steve", 100, "resources/Sci_fi_basecolor.jpg", "resources/Sci_fi_metallic.jpg", "resources/animation", glm::vec3(0.0f), glm::vec3(0.0f) };
     GPUMesh m_arm{ "resources/dragon.obj" };
 
     Texture m_texture;
 
     struct Node* rootArm = new struct Node;
 
+    int bossHealth = 100;
+
+    bool m_gameOver {false};
+
     // Projection and view matrices for you to fill in and use
     glm::mat4 m_projectionMatrix = glm::perspective(glm::radians(80.0f), 1.0f, 0.1f, 30.0f);
     glm::mat4 m_viewMatrix = glm::lookAt(glm::vec3(-1, 1, -1), glm::vec3(0), glm::vec3(0, 1, 0));
     glm::mat4 m_modelMatrix { 1.0f };
-    glm::mat3x3 m_jacobian{ 1.f };
+    glm::mat3x3 m_jacobian3x3{ 1.f };
+    glm::mat2x2 m_jacobian2x2{ 1.f };
 
     glm::mat4 m_bossModelMatrix{ 1.0f };
     glm::vec3 lastPos{ 0.f };

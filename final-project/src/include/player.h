@@ -27,6 +27,7 @@ public:
            std::string const& name,
            int const& health,
            std::filesystem::path const& texture,
+           std::filesystem::path const& sTexture,
            std::filesystem::path const& mesh,
            glm::vec3 const& position,
            glm::vec3 const& rotation);

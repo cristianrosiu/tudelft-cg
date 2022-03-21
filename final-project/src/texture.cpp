@@ -42,11 +42,11 @@ Texture::~Texture()
         glDeleteTextures(1, &m_texture);
 }
 
-void Texture::bind(GLint textureSlot, GLint active)
+void Texture::bind(GLint textureSlot, GLint active, GLint location)
 {
 
     glActiveTexture(GL_TEXTURE0 + textureSlot);
     glBindTexture(GL_TEXTURE_2D, m_texture);
-    glUniform1i(3, textureSlot);
+    glUniform1i(location, textureSlot);
     glUniform1i(4, active);
 }
