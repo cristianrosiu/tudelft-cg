@@ -24,6 +24,7 @@ DISABLE_WARNINGS_POP()
 #include <iostream>
 #include <vector>
 #include <stack>
+#include <queue>
 #include "node.h"
 
 
@@ -97,6 +98,7 @@ public:
         glNamedFramebufferTexture(framebuffer, GL_DEPTH_ATTACHMENT, texShadow, 0);
 
         int index = 0;
+        createBossTree();
         while (!m_window.shouldClose()) {
 
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -106,7 +108,7 @@ public:
             if (player.isMoving)
             {
                 index++;
-                if (index >= 20) index = 0;
+                if (index >= 1) index = 0;
             }
             else
             {
@@ -182,8 +184,8 @@ public:
             m_modelMatrix = player.modelMatrix();
             configureUniforms();
             player.mesh(index).draw();
-
-            createBossTree();
+            
+            updateBoss();
 
             // Processes input and swaps the window buffer
             m_window.swapBuffers();
@@ -272,21 +274,111 @@ public:
 
     void createBossTree()
     {
-        struct Node* rootArm = new struct Node();
+        rootArm->translationMatrix = glm::translate(rootArm->translationMatrix, glm::vec3(0.f, 0.f, -1.f));
 
         struct Node* arm2 = new struct Node();
-        arm2->transformationMatrix = glm::translate(glm::mat4(1.), glm::vec3(0.f, 0.f, -1.f));
+        arm2->translationMatrix = glm::translate(arm2->translationMatrix, glm::vec3(0.f, 0.f, -1.f));
 
         struct Node* arm3 = new struct Node();
-        arm3->transformationMatrix = glm::rotate(glm::mat4(1.), glm::radians(45.f), glm::vec3(0.f, 1.f, 0.f)) * glm::translate(glm::mat4(1.), glm::vec3(0.f, 0.f, -1.f));
+        arm3->translationMatrix = glm::translate(arm3->translationMatrix, glm::vec3(0.f, 0.f, -1.f));
 
         rootArm->next_level = arm2;
+        rootArm->next_object = NULL;
+
         arm2->next_level = arm3;
-        
+        arm2->next_object = NULL;
+
         arm3->next_level = NULL;
         arm3->next_object = NULL;
+    }
 
+    void updateBoss()
+    {
+        m_bossModelMatrix = glm::mat4(1.f);
+        getLastPos(rootArm);
+        m_bossModelMatrix = glm::mat4(1.f);
+        updateGradient(rootArm, lastPos);
+        updateJacobian();
+        glm::vec3 targetPos = glm::normalize(player.position() - lastPos);
+        glm::vec2 angles = glm::transpose(m_jacobian) * (glm::vec2(targetPos.x, targetPos.z) * 0.1f);
+        angleStack.push(angles.x);
+        angleStack.push(angles.y);
+        m_bossModelMatrix = glm::mat4(1.f);
         render_object(rootArm);
+    }
+
+    void updateJacobian()
+    {
+        glm::vec3 dm0 = m_jacobianStack.front();
+        m_jacobianStack.pop();
+        //std::cout << glm::to_string(dm0) << "\n";
+
+        glm::vec3 dm1 = m_jacobianStack.front();
+        m_jacobianStack.pop();
+        //std::cout << glm::to_string(dm1) << "\n\n";
+   
+        m_jacobian = {
+        dm0.x, dm1.x,
+        dm0.z, dm1.z
+        };
+    }
+
+    void getLastPos(struct Node* curr_object)
+    {
+        if (curr_object != NULL) {
+            /* Push matrix to stack so we can come back. */
+            /* Transformations for this object. */
+            m_matrixStack.push(m_bossModelMatrix);
+
+            m_bossModelMatrix = m_bossModelMatrix * curr_object->translationMatrix * curr_object->rotationMatrix;
+
+            if (curr_object->next_level == NULL)
+                lastPos =  m_bossModelMatrix * glm::vec4(0.f, 0.f, 0.f, 1.f);
+
+            /* Draw object. */
+            // TODO: add type of object so you can draw multiples meshes
+
+            /* Render next object lower in the hierarchy. */
+            getLastPos(curr_object->next_level);
+
+            /* Restore transformation matrix. */
+            m_bossModelMatrix = m_matrixStack.top();
+            m_matrixStack.pop();
+
+            /* Render next object at same level in the hierarchy. */
+            getLastPos(curr_object->next_object);
+
+        }
+    }
+
+    void updateGradient(struct Node* curr_object, glm::vec3 lastPos)
+    {
+        if (curr_object != NULL) {
+            /* Push matrix to stack so we can come back. */
+            /* Transformations for this object. */
+            m_matrixStack.push(m_bossModelMatrix);
+
+            m_bossModelMatrix = m_bossModelMatrix * curr_object->translationMatrix * curr_object->rotationMatrix;
+
+            glm::vec4 currentPos = m_bossModelMatrix * glm::vec4(0.f, 0.f, 0.f, 1.f);
+            glm::vec3 targetPos = lastPos - glm::vec3(currentPos);
+            
+            if(curr_object->next_level != NULL)
+                m_jacobianStack.push(glm::cross(glm::vec3(m_bossModelMatrix*glm::vec4(glm::vec3(0.f, 1.f, 0.f),1.0f)), targetPos));
+
+            /* Draw object. */
+            // TODO: add type of object so you can draw multiples meshes
+
+            /* Render next object lower in the hierarchy. */
+            updateGradient(curr_object->next_level, lastPos);
+
+            /* Restore transformation matrix. */
+            m_bossModelMatrix = m_matrixStack.top();
+            m_matrixStack.pop();
+
+            /* Render next object at same level in the hierarchy. */
+            updateGradient(curr_object->next_object, lastPos);
+        }
     }
 
     /* Render model by recursively traversing the tree (or DAG) structure. */
@@ -297,8 +389,15 @@ public:
             /* Transformations for this object. */
             m_matrixStack.push(m_bossModelMatrix);
 
-            m_bossModelMatrix = m_bossModelMatrix * curr_object->transformationMatrix;
+            if (curr_object->next_level != NULL)
+            {
+                std::cout << angleStack.front() << "\n";
+                curr_object->rotationMatrix = glm::rotate(curr_object->rotationMatrix, angleStack.front(), glm::vec3(0.f, 1.f, 0.f));
+                angleStack.pop();
+            }
+            m_bossModelMatrix = m_bossModelMatrix * curr_object->translationMatrix * curr_object->rotationMatrix;
 
+          
             /* Draw object. */
             // TODO: add type of object so you can draw multiples meshes
             m_modelMatrix = m_bossModelMatrix;
@@ -331,16 +430,21 @@ private:
     Player player{ &m_window, "steve", 100, "resources/yellow.png", "resources/animation", glm::vec3(0.0f), glm::vec3(0.0f) };
     GPUMesh m_arm{ "resources/dragon.obj" };
 
-
     Texture m_texture;
+
+    struct Node* rootArm = new struct Node;
 
     // Projection and view matrices for you to fill in and use
     glm::mat4 m_projectionMatrix = glm::perspective(glm::radians(80.0f), 1.0f, 0.1f, 30.0f);
     glm::mat4 m_viewMatrix = glm::lookAt(glm::vec3(-1, 1, -1), glm::vec3(0), glm::vec3(0, 1, 0));
     glm::mat4 m_modelMatrix { 1.0f };
+    glm::mat2 m_jacobian{ 1.f };
 
     glm::mat4 m_bossModelMatrix{ 1.0f };
+    glm::vec3 lastPos{ 0.f };
     std::stack<glm::mat4> m_matrixStack;
+    std::queue<glm::vec3> m_jacobianStack;
+    std::queue<float> angleStack;
 
     glm::vec3 m_camPos{ 0.f };
 };
