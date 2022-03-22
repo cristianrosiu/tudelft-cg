@@ -7,13 +7,19 @@ DISABLE_WARNINGS_POP()
 #include <filesystem>
 #include <framework/opengl_includes.h>
 
+static enum TextureType { DIFFUSE, SPECULAR };
+
 struct ImageLoadingException : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
 
+#ifndef TEXTURE_H
+#define TEXTURE_H
+
 class Texture {
 public:
     Texture(std::filesystem::path filePath);
+    Texture(std::filesystem::path filePath, TextureType type);
     Texture(const Texture&) = delete;
     Texture(Texture&&);
     ~Texture();
@@ -21,9 +27,15 @@ public:
     Texture& operator=(const Texture&) = delete;
     Texture& operator=(Texture&&) = default;
 
-    void bind(GLint textureSlot, GLint active);
+    GLuint const getTextureID() const;
+    TextureType const getType() const;
+
+    //void bind(GLint textureSlot, GLint active);
 
 private:
     static constexpr GLuint INVALID = 0xFFFFFFFF;
     GLuint m_texture{ INVALID };
+    TextureType m_type{ TextureType::DIFFUSE };
 };
+
+#endif

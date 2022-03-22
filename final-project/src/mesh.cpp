@@ -13,15 +13,31 @@ DISABLE_WARNINGS_POP()
 #include <iostream>
 #include <vector>
 
+GPUMesh::GPUMesh(std::filesystem::path filePath, std::filesystem::path texture)
+    :
+    d_diffuseTexture(texture)
+{
+    if (!std::filesystem::exists(filePath))
+        throw MeshLoadingException(fmt::format("File {} does not exist", filePath.string().c_str()));
+
+    const auto cpuMesh = mergeMeshes(loadMesh(filePath));
+    
+    this->d_vertices  = cpuMesh.vertices;
+    this->d_triangles = cpuMesh.triangles;
+
+    setupMesh();
+}
+
 GPUMesh::GPUMesh(std::filesystem::path filePath)
 {
     if (!std::filesystem::exists(filePath))
         throw MeshLoadingException(fmt::format("File {} does not exist", filePath.string().c_str()));
 
-    // Defined in <framework/mesh.h>
     const auto cpuMesh = mergeMeshes(loadMesh(filePath));
-    this->d_vertices  = cpuMesh.vertices;
+
+    this->d_vertices = cpuMesh.vertices;
     this->d_triangles = cpuMesh.triangles;
+
     setupMesh();
 }
 
@@ -82,17 +98,20 @@ bool GPUMesh::hasTextureCoords() const
     return d_hasTextureCoords;
 }
 
-void GPUMesh::bindMesh()
-{
-
-}
-
-void GPUMesh::draw()
+void GPUMesh::draw(Shader &shader)
 {
     glBindVertexArray(d_vao);
     glDrawElements(GL_TRIANGLES, d_numIndices, GL_UNSIGNED_INT, nullptr);
     //glBindVertexArray(0);
 }   
+
+void GPUMesh::bindTexture(int slot, int location)
+{
+    glUniform1i(4, 0);
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D, d_diffuseTexture.getTextureID());
+    glUniform1i(location, slot);
+}
 
 void GPUMesh::moveInto(GPUMesh&& other)
 {

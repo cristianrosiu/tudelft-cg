@@ -1,10 +1,21 @@
 #version 450
+
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+}; 
+  
+uniform Material material;
+
 layout(location = 3) uniform sampler2D colorMap;
 layout(location = 4) uniform bool hasTexCoords;
 layout(location = 5) uniform mat4 lightMVP;
 layout(location = 6) uniform sampler2D texShadow;
 layout(location = 7) uniform vec3 lightPos;
 layout(location = 8) uniform vec3 camPos;
+
 
 in vec3 fragPos;
 in vec3 fragNormal;
@@ -64,7 +75,6 @@ float calcShadowFactor(vec4 fragLightCoord)
 void main()
 {
     const vec3 normal = normalize(fragNormal);
-
 
         vec4 fragLightCoord = lightMVP * vec4(fragPos, 1.0);
 

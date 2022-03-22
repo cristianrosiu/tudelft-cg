@@ -14,7 +14,17 @@ add_executable(FinalProject
     "src/application.cpp"
     "src/texture.cpp"
 	"src/mesh.cpp"
- "src/include/player.h" "src/include/entity.h" "src/entity.cpp" "src/player.cpp" "src/camera.cpp" "src/camera.h" "src/mousepicker.h" "src/mousepicker.cpp"       "src/node.h")
+	"src/mousepicker.h" 
+	"src/mousepicker.cpp"
+	"src/transform.h" 
+	"src/transform.cpp" 
+	"src/model.h" 
+	"src/model.cpp" 
+	"src/gameobject.h" 
+	"src/gameobject.cpp" 
+	"src/shadowmap.h" 
+	"src/shadowmap.cpp" 
+	"src/utility.h" "src/entity.h" "src/entity.cpp" "src/player.h" "src/player.cpp" "src/boss.h" "src/boss.cpp")
 target_compile_features(FinalProject PRIVATE cxx_std_20)
 target_link_libraries(FinalProject PRIVATE CGFramework)
 enable_sanitizers(FinalProject)

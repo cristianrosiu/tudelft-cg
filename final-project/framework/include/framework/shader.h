@@ -7,6 +7,7 @@ DISABLE_WARNINGS_PUSH()
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
+#include <glm/gtc/type_ptr.hpp>
 DISABLE_WARNINGS_POP()
 #include <exception>
 #include <filesystem>
@@ -25,7 +26,14 @@ public:
 
     Shader& operator=(Shader&&);
 
-    // ... Feel free to add more methods here (e.g. for setting uniforms or keeping track of texture units) ...
+    // utility uniform functions
+    void setBool(const std::string& name, bool value) const;
+    void setInt(const std::string& name, int value) const;
+    void setFloat(const std::string& name, float value) const;
+    void setMatrix(const std::string& name, const glm::mat4& value) const;
+    void setMatrix(const std::string& name, const glm::mat3& value) const;
+    void setVector(const std::string& name, const glm::vec3& value) const;
+    void setVector(const std::string& name, const glm::vec2& value) const;
 
     void bind() const;
 

@@ -5,6 +5,10 @@
 #include <glm/mat4x4.hpp>
 #include <framework/window.h>
 
+
+#ifndef MOUSEPICKER_H
+#define MOUSEPICKER_H
+
 class MousePicker
 {
 	glm::vec3 d_currentRayDir {0.f};
@@ -20,3 +24,5 @@ class MousePicker
 		
 		void update(glm::mat4 const& viewMatrix);
 };
+
+#endif

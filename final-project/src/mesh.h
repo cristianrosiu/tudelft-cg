@@ -5,10 +5,14 @@
 #include <vector>
 #include <framework/mesh.h>
 #include <framework/shader.h>
+#include "texture.h"
 
 struct MeshLoadingException : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
+
+#ifndef GPUMESH_H
+#define GPUMESH_H
 
 class GPUMesh {
 
@@ -19,7 +23,12 @@ class GPUMesh {
     GLuint d_vbo{ INVALID };
     GLuint d_vao{ INVALID };
 
+    std::vector<Vertex> d_vertices;
+    std::vector<glm::uvec3> d_triangles;
+    Texture d_diffuseTexture{"resources/checkerboard.png"};
+
 public:
+    GPUMesh(std::filesystem::path filePath, std::filesystem::path texture);
     GPUMesh(std::filesystem::path filePath);
     // Cannot copy a GPU mesh because it would require reference counting of GPU resources.
     GPUMesh(const GPUMesh&) = delete;
@@ -32,18 +41,17 @@ public:
 
     bool hasTextureCoords() const;
 
-    std::vector<Vertex> d_vertices;
-    std::vector <glm::uvec3> d_triangles;
-
     // Bind VAO and call glDrawElements.
-    void draw();
-    void setupMesh();
-    void bindMesh();
+    void draw(Shader& shader);
+    void bindTexture(int slot, int location);
 
 private:
+    void setupMesh();
     void moveInto(GPUMesh&&);
     void freeGpuMemory();
 
 private:
 
 };
+
+#endif
