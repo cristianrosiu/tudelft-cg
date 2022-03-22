@@ -307,15 +307,19 @@ public:
     void createBossTree()
     {
         rootArm->translationMatrix = glm::translate(rootArm->translationMatrix, glm::vec3(0.f, 0.f, -1.f));
+        rootArm->mesh = GPUMesh("resources/sphere.obj");
 
         struct Node* arm2 = new struct Node();
         arm2->translationMatrix = glm::translate(arm2->translationMatrix, glm::vec3(0.f, 0.f, -1.f));
+        arm2->mesh = GPUMesh("resources/sphere.obj");
 
         struct Node* arm3 = new struct Node();
         arm3->translationMatrix = glm::translate(arm3->translationMatrix, glm::vec3(0.f, 0.f, -1.f));
+        arm3->mesh = GPUMesh("resources/sphere.obj");
 
         struct Node* arm4 = new struct Node();
         arm4->translationMatrix = glm::translate(arm4->translationMatrix, glm::vec3(0.f, 0.f, -1.f));
+        arm4->mesh = GPUMesh("resources/dragon.obj");
 
         rootArm->next_level = arm2;
         rootArm->next_object = NULL;
@@ -529,6 +533,12 @@ public:
             /* Draw object. */
             // TODO: add type of object so you can draw multiples meshes
             //m_modelMatrix = m_bossModelMatrix;
+            switch (curr_object->type)
+            {
+                case NodeType::BODY:
+
+                    break;
+            }
             configureUniforms();
             m_arm.draw();
 
@@ -543,12 +553,6 @@ public:
             render_object(curr_object->next_object);
         }
     }
-
-    // void onGameOver()
-    // {
-    //     gameOverPanel();
-        
-    // }
 private:
     Window m_window;
 
@@ -558,11 +562,12 @@ private:
     Shader m_shadowShader;
 
     Light m_light;
+    Light m_coneLight;
 
     GLfloat m_deltaTime;
 
     Player player{ &m_window, "steve", 100, "resources/Sci_fi_basecolor.jpg", "resources/Sci_fi_metallic.jpg", "resources/animation", glm::vec3(0.0f), glm::vec3(0.0f) };
-    GPUMesh m_arm{ "resources/dragon.obj" };
+    GPUMesh m_arm{ "resources/sphere.obj" };
 
     Texture m_texture;
 

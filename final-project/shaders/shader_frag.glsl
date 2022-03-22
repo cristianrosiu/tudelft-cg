@@ -3,6 +3,7 @@ layout(location = 3) uniform sampler2D colorMap;
 layout(location = 4) uniform bool hasTexCoords;
 layout(location = 5) uniform mat4 lightMVP;
 layout(location = 6) uniform sampler2D texShadow;
+layout(location = 10) uniform sampler2D texShadow2;
 layout(location = 7) uniform vec3 lightPos;
 layout(location = 8) uniform vec3 camPos;
 layout(location = 9) uniform sampler2D sMap;
