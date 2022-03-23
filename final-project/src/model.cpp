@@ -1,6 +1,9 @@
 #include "model.h"
 #include <iostream>
 
+Model::Model()
+{}
+
 Model::Model(std::filesystem::path const& path)
 {
 	loadModel(path);
@@ -30,15 +33,7 @@ void Model::loadModel(std::filesystem::path const& path)
 		}
 	}
 }
-
-//void Model::loadModel(std::filesystem::path const& path, std::vector<Texture> textures)
-//{
-//	for (const auto& entry : std::filesystem::directory_iterator(path))
-//	{
-//		if (entry.path().extension() == ".obj")
-//		{
-//			
-//			m_meshes.push_back(GPUMesh{ entry.path() });
-//		}
-//	}
-//}
+int const& Model::getMeshLength()
+{
+	return m_meshes.size();
+}

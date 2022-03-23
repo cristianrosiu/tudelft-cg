@@ -12,6 +12,7 @@ struct Light {
     vec3 position;
     vec3 color;
     mat4 viewMatrix;
+    float radius;
 }; 
   
 uniform Material material;
@@ -45,7 +46,7 @@ vec3 calcLight(Light light)
     float minLight = 0.01;
     float b = 1.0 / (radius*radius * minLight);
     float dist    = length(light.position - fragPos);
-    float att = clamp(1.0 - dist*dist/(radius*radius), 0.0, 1.0); att *= att;
+    float att = clamp(1.0 - dist*dist/(light.radius*light.radius), 0.0, 1.0); att *= att;
 
     // Diffuse
     float diff = max(dot(lightDir, normal), 0.0);
@@ -57,7 +58,6 @@ vec3 calcLight(Light light)
 
     return (diffuse + specular)*att;
 } 
-
 
 float calcShadowPCF(vec4 fragLightCoord, int i)
 {
@@ -127,8 +127,10 @@ void main()
         float intensity = distFromCenter > 0.5 ? 0.0 : (0.5 - distFromCenter)*2;
 
         float shadow = calcShadowPCF(fragLightCoord, i);
-
-        lighting += calcLight(lights[i]) * (1 - shadow); //* pow(intensity, 0.8);
+        if (i == 1)
+            lighting += calcLight(lights[i]) * (1 - shadow) * pow(intensity, 2.0);
+        else
+            lighting += calcLight(lights[i]) * (1 - shadow);
     }
 
     if (hasTexCoords)

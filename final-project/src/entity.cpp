@@ -1,10 +1,7 @@
 #include "entity.h"
 
-Entity::Entity(std::filesystem::path const& path)
-	: GameObject(path)
-{}
 
-int const Entity::getHealth() const
+unsigned const Entity::getHealth() const
 {
 	return m_health;
 }

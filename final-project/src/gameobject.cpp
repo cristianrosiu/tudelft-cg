@@ -1,11 +1,10 @@
 #include "gameobject.h"
 
-GameObject::GameObject(std::filesystem::path const& path)
-    : Model(path)
+GameObject::GameObject()
+    : Model()
 {}
 
-
-GameObject::GameObject(std::filesystem::path const& path, std::vector<Texture> textures)
+GameObject::GameObject(std::filesystem::path const& path)
     : Model(path)
 {}
 
@@ -24,7 +23,7 @@ void GameObject::updateSelfAndChild()
     else
     {
         for (auto&& child : children)
-            child->forceUpdateSelfAndChild();
+            child->updateSelfAndChild();
     }
 }
 

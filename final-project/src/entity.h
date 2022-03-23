@@ -4,15 +4,15 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-class Entity : public GameObject
+class Entity
 {
-	int m_health{ 0 };
+	unsigned int m_health{ 100 };
 
 	public:
-		Entity(std::filesystem::path const& path);
+		Entity() = default;
 		
 		void setHealth(int modifier);
-		int const getHealth() const;
+		unsigned int const getHealth() const;
 
 };
 

@@ -17,8 +17,8 @@ class GameObject : public Model
 		
 		// constructor, expects a filepath to a 3D model.
 		
+		GameObject();
 		GameObject(std::filesystem::path const& path);
-		GameObject(std::filesystem::path const& path, std::vector<Texture> textures);
 
 		//Add child. Argument input is argument of any constructor that you create.
 		//By default you can use the default constructor and don't put argument input.

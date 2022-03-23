@@ -1,5 +1,6 @@
 #include "shadowmap.h"
 #include <iostream>
+#include "player.h"
 
 ShadowMap::ShadowMap(glm::uvec2 const& size)
 {
@@ -46,7 +47,12 @@ void ShadowMap::renderShadowMap(Shader& shader, glm::mat4 const& projectionMatri
         shader.setMatrix("projectionMatrix", projectionMatrix);
         shader.setMatrix("viewMatrix", light.viewMatrix);
         shader.setMatrix("modelMatrix", gameObject.transform.getModelMatrix());
-        gameObject.draw(shader);
+
+        // This is very bad practice because it breaks Liskov Principle but works for now
+        if (dynamic_cast<Player*>(&gameObject) != nullptr)
+            dynamic_cast<Player*>(&gameObject)->draw(shader);
+        else
+            gameObject.draw(shader);
     va_end(valist);
     
 

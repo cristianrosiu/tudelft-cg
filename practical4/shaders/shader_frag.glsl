@@ -92,7 +92,7 @@ void main()
 
     vec3 color = texture(texLight, shadowMapCoord).rgb;
     //outColor = vec4(vec3(max(dot(fragNormal, lightDir)*(1.0 - lightFactor), 0.0)), 1.0);
-    //outColor = vec4(vec3(max(dot(fragNormal, lightDir), 0.0))*(1.0 - lightFactor)*pow(intensity, 1.0)*color, 1.0);
+    outColor = vec4(vec3(max(dot(fragNormal, lightDir), 0.0))*(1.0 - lightFactor)*pow(intensity, 0.1)*color, 1.0);
     
-    outColor = vec4(vec3(fragLightCoord.z), 1);
+    //outColor = vec4(vec3(fragLightCoord.z), 1);
 }

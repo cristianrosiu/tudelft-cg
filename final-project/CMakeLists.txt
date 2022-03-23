@@ -24,7 +24,7 @@ add_executable(FinalProject
 	"src/gameobject.cpp" 
 	"src/shadowmap.h" 
 	"src/shadowmap.cpp" 
-	"src/utility.h" "src/entity.h" "src/entity.cpp" "src/player.h" "src/player.cpp" "src/boss.h" "src/boss.cpp")
+	"src/utility.h" "src/entity.h" "src/entity.cpp" "src/player.h" "src/player.cpp" "src/boss.h" "src/boss.cpp" "src/camera.h" "src/camera.cpp")
 target_compile_features(FinalProject PRIVATE cxx_std_20)
 target_link_libraries(FinalProject PRIVATE CGFramework)
 enable_sanitizers(FinalProject)

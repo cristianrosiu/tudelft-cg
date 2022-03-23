@@ -50,7 +50,7 @@ void Transform::setLocalScale(const glm::vec3& newScale)
 
 const glm::vec3 Transform::getGlobalPosition()
 {
-    return glm::vec3(m_modelMatrix[3]);
+    return m_modelMatrix[3];
 }
 
 const glm::vec3& Transform::getLocalPosition()

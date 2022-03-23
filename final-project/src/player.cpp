@@ -6,17 +6,30 @@
 #include "glm/gtx/string_cast.hpp"
 
 Player::Player(std::filesystem::path const& path, Window* window, glm::mat4 projectionMatrix)
-    : Entity(path), m_window(window), m_projectionMatrix(projectionMatrix), m_picker(window, projectionMatrix)
+    : GameObject(path), m_window(window), m_projectionMatrix(projectionMatrix), m_picker(window, projectionMatrix)
 {}
+
+void Player::update(glm::vec3 const& camPos, glm::mat4 const& camViewMatrix, float const &deltaTime)
+{
+    updateInput();
+    move(deltaTime);
+    lookAt(camPos, camViewMatrix);
+    updateSelfAndChild();
+
+    if (m_moving)
+    {
+        if (m_currentFrame == m_meshes.size() - 1)
+            m_currentFrame = 0;
+        m_currentFrame++;
+    }
+    else
+        m_currentFrame = 0;
+}
 
 void Player::move(float deltaTime)
 {
-    updateInput();
     glm::vec3 velocity = glm::vec3(m_horizontalInput, 0.f, m_verticalInput) * (float)RUN_SPEED * deltaTime;
-    //d_position = glm::translate(glm::mat4(1.f), velocity) * glm::vec4(d_position, 1.f);
-
     transform.setLocalPosition(transform.getLocalPosition() + velocity);
-    updateSelfAndChild();
 }
 
 void Player::lookAt(glm::vec3 const &camPos, glm::mat4 const& camViewMatrix)
@@ -31,9 +44,7 @@ void Player::lookAt(glm::vec3 const &camPos, glm::mat4 const& camViewMatrix)
 
     float angle = std::atan2f(viewForward.z, viewForward.x);
 
-    //d_rotationMatrix = glm::rotate(glm::mat4(1.f), glm::radians(90.f), d_up) * glm::rotate(glm::mat4(1.f), angle, d_up);
     transform.setLocalRotation(glm::vec3(0.f, glm::degrees(angle) + 90.f, 0.f));
-    updateSelfAndChild();
 }
 
 void Player::updateInput()
@@ -53,4 +64,10 @@ void Player::updateInput()
         m_horizontalInput = 0;
 
     m_moving = (m_horizontalInput != 0) || (m_verticalInput != 0);
+}
+
+#include <iostream>
+void Player::draw(Shader& shader)
+{
+    m_meshes[m_currentFrame].draw(shader);
 }

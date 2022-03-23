@@ -9,18 +9,19 @@
 class Model
 {
 public:
+    Model();
     Model(std::filesystem::path const& path);
-    //Model(std::filesystem::path const& path, std::vector<Texture> textures);
 
-    void draw(Shader& shader);
+    virtual void draw(Shader& shader);
     void bindTexture(int slot, int location);
+    int const &getMeshLength();
 
     Material material;
-    //GPUMesh const getMeshes(int index) const;
-private:
+protected:
     std::vector<GPUMesh> m_meshes;
+private:
+   
     void loadModel(std::filesystem::path const& path);
-    //void loadModel(std::filesystem::path const& path, std::vector<Texture> textures);
 };
 
 #endif

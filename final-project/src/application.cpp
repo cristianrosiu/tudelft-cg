@@ -27,6 +27,8 @@ DISABLE_WARNINGS_POP()
 #include "player.h"
 #include "boss.h"
 
+
+
 class Application {
 public:
     Application()
@@ -65,42 +67,65 @@ public:
         GLfloat lastFrame = (GLfloat)glfwGetTime();
 
         // Main light
-        m_lights[0].position = glm::vec3(5.f, 4.f, 5.f);
-        m_lights[0].viewMatrix = glm::lookAt(m_lights[0].position, glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f));
-        m_lights[0].color = glm::vec3(1.f, 0.f, 0.0f);
+        m_lights[0].position = glm::vec3(0.f, 6.f, -4.f);
+        m_lights[0].color = glm::vec3(1.f);
+        m_lights[0].radius = 12.f;
 
         // Boss light
-        m_lights[1].position = glm::vec3(-5.f, 4.f, -5.f);
-        m_lights[1].viewMatrix = glm::lookAt(m_lights[1].position, glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f));
         m_lights[1].color = glm::vec3(0.f, 0.f, 1.f);
+        m_lights[1].radius = 40.f;
 
-        Player player{ "./resources/animation", &m_window, m_projectionMatrix };
+        m_cameras[0].type = CameraType::PLAYER;
+        m_cameras[1].type = CameraType::CUTSCENE;
+        m_cameras[1].position = glm::vec3(3.f, 10.f, -5.f);
+        m_cameras[1].viewMatrix = glm::lookAt(m_cameras[1].position, glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f));
+         
+        Player player{ "./resources/animation_run", &m_window, m_projectionMatrix };
         player.material.kd = glm::vec3(0.8f);
         player.material.ks = glm::vec3(0.5f);
-        player.material.shininess = 32.f;
+        player.material.shininess = 10.f;
+
+        player.transform.setLocalPosition(glm::vec3(0.f, 0.f, -13.5f));
+        player.updateSelfAndChild();
 
         Boss boss{ "./resources/boss/body", "./resources/boss/head", 3, &player};
-        GameObject floor{ "./resources/floor" };
-        floor.material.kd = glm::vec3(0.8f);
-        floor.material.ks = glm::vec3(0.2f);
-        floor.material.shininess = 10.f;
-
+        GameObject dugeon{ "./resources/dungeon" };
+        //dugeon.transform.setLocalScale(glm::vec3(0.5f, 0.5f, 0.5f));
+        //dugeon.updateSelfAndChild();
+        dugeon.material.kd = glm::vec3(0.8f);
+        dugeon.material.ks = glm::vec3(0.2f);
+        dugeon.material.shininess = 10.f;
 
         while (!m_window.shouldClose()) {
             m_window.updateInput();
 
+            updateCutscene(player);
 
-            m_lights[1].position = boss.getLastPosition() + glm::vec3(0.f, 4.f, 0.f);
-            m_lights[1].viewMatrix = glm::lookAt(m_lights[1].position, player.transform.getGlobalPosition(), glm::vec3(0.f, 1.f, 0.f));
+            if (isCutscene && glfwGetTime() < 2.5f)
+                activeCamera = 1;
+            else
+            {
+                //Updates
+                activeCamera = 0;
+                m_cameras[activeCamera].position = player.transform.getLocalPosition() + glm::vec3(0.f, 6.f, -4.f);
+                m_cameras[activeCamera].viewMatrix = glm::lookAt(m_cameras[activeCamera].position, player.transform.getLocalPosition(), glm::vec3(0.f, 1.f, 0.f));
+                player.update(m_cameras[activeCamera].position, m_cameras[activeCamera].viewMatrix, m_deltaTime);
+            }
+            boss.updateBoss(m_deltaTime);
+           
+            std::cout << glm::to_string(player.transform.getLocalPosition()) << "\n\n";
+
+            m_lights[1].position = boss.getLastPosition() + glm::vec3(0.f, 3.f, 0.f);
+            m_lights[1].viewMatrix = glm::lookAt(m_lights[1].position, m_lights[1].position + boss.getLastForward() - glm::vec3(0.f, 1.f, 0.f) , glm::vec3(0.f, 1.f, 0.f));
 
             // Calculate DeltaTime of current frame
             GLfloat currentFrame = (GLfloat)glfwGetTime();
-            m_deltaTime = (currentFrame - lastFrame);
+            m_deltaTime = glm::abs(currentFrame - lastFrame);
             lastFrame = currentFrame;
 
             // Compute the shadow map textures
             for (int i = 0; i < 2; i++)
-                m_shadowMaps[i].renderShadowMap(m_shadowShader, m_projectionMatrix, m_lights[i], player, floor);
+                m_shadowMaps[i].renderShadowMap(m_shadowShader, m_projectionMatrix, m_lights[i], dugeon, player);
 
             m_defaultShader.bind();
 
@@ -118,22 +143,31 @@ public:
             glDisable(GL_CULL_FACE);
             glEnable(GL_DEPTH_TEST);
 
-            m_camPos = player.transform.getLocalPosition() + glm::vec3(0.f, 4.f, -4.f);
-            m_viewMatrix = glm::lookAt(m_camPos, player.transform.getLocalPosition(), glm::vec3(0.f, 1.f, 0.f));
-
-            // Updates
-            player.move(m_deltaTime);
-            player.lookAt(m_camPos, m_viewMatrix);
-            boss.updateBoss();
-
             m_defaultShader.setMatrix("projectionMatrix", m_projectionMatrix);
-            m_defaultShader.setMatrix("viewMatrix", m_viewMatrix);
-            m_defaultShader.setVector("camPos", m_camPos);
+            m_defaultShader.setMatrix("viewMatrix", m_cameras[activeCamera].viewMatrix);
+            m_defaultShader.setVector("camPos", m_cameras[activeCamera].position);
+
+            for (int i = 0; i < 2; i++)
+            {
+                m_defaultShader.setVector("lights[" + std::to_string(i) + "].position", m_lights[i].position);
+                m_defaultShader.setVector("lights[" + std::to_string(i) + "].color", m_lights[i].color);
+                m_defaultShader.setFloat("lights[" + std::to_string(i) + "].radius", m_lights[i].radius);
+                m_defaultShader.setMatrix("lights[" + std::to_string(i) + "].viewMatrix", m_projectionMatrix * m_lights[i].viewMatrix * dugeon.transform.getModelMatrix());
+            }
+
+            // Draw floor
+            m_defaultShader.setVector("material.diffuse", dugeon.material.kd);
+            m_defaultShader.setVector("material.specular", dugeon.material.ks);
+            m_defaultShader.setFloat("material.shininess", dugeon.material.shininess);
+            m_defaultShader.setMatrix("modelMatrix", dugeon.transform.getModelMatrix());
+            //floor.bindTexture(3, 3);
+            dugeon.draw(m_defaultShader);
 
             for (int i = 0; i < 2; i++)
             {
                 m_defaultShader.setVector("lights[" + std::to_string(i)+ "].position", m_lights[i].position);
                 m_defaultShader.setVector("lights[" + std::to_string(i) + "].color", m_lights[i].color);
+                m_defaultShader.setFloat("lights[" + std::to_string(i) + "].radius", m_lights[i].radius);
                 m_defaultShader.setMatrix("lights[" + std::to_string(i) + "].viewMatrix", m_projectionMatrix * m_lights[i].viewMatrix * player.transform.getModelMatrix());
             }
 
@@ -144,20 +178,6 @@ public:
             m_defaultShader.setFloat("material.shininess", player.material.shininess);
             //player.bindTexture(2, 3);
             player.draw(m_defaultShader);
-
-            for (int i = 0; i < 2; i++)
-            {
-                m_defaultShader.setVector("lights[" + std::to_string(i) + "].position", m_lights[i].position);
-                m_defaultShader.setVector("lights[" + std::to_string(i) + "].color", m_lights[i].color);
-                m_defaultShader.setMatrix("lights[" + std::to_string(i) + "].viewMatrix", m_projectionMatrix * m_lights[i].viewMatrix * floor.transform.getModelMatrix());
-            }
-            // Draw floor
-            m_defaultShader.setVector("material.diffuse", floor.material.kd);
-            m_defaultShader.setVector("material.specular", floor.material.ks);
-            m_defaultShader.setFloat("material.shininess", floor.material.shininess);
-            m_defaultShader.setMatrix("modelMatrix", floor.transform.getModelMatrix());
-            //floor.bindTexture(3, 3);
-            floor.draw(m_defaultShader);
 
             boss.draw(m_defaultShader);
 
@@ -210,6 +230,20 @@ public:
 
     }
 
+    void updateCutscene(Player &player)
+    {
+        if (isCutscene)
+            return;
+
+        glm::vec3 sceneTrigger(0.f, 0.f, -8.f);
+
+        if (glm::distance(sceneTrigger, player.transform.getGlobalPosition()) < 2.f)
+        {
+            glfwSetTime(0.f);
+            isCutscene = true;
+        }
+    }
+
 
 
 private:
@@ -219,8 +253,13 @@ private:
     Shader m_defaultShader;
     Shader m_shadowShader;
 
-    ShadowMap m_shadowMaps[2]{ ShadowMap{glm::uvec2(2048)}, ShadowMap{glm::uvec2(2048)} };
+    ShadowMap m_shadowMaps[2]{ ShadowMap{glm::uvec2(4096)}, ShadowMap{glm::uvec2(4096)} };
     Light m_lights[2];
+    Camera m_cameras[2];
+
+    int activeCamera{ 0 };
+
+    bool isCutscene = false;
 
     GLfloat m_deltaTime;
 
@@ -228,8 +267,6 @@ private:
     glm::mat4 m_projectionMatrix = glm::perspective(glm::radians(80.0f), 1.0f, 0.1f, 30.0f);
     glm::mat4 m_viewMatrix = glm::lookAt(glm::vec3(-1, 1, -1), glm::vec3(0), glm::vec3(0, 1, 0));
     glm::mat4 m_modelMatrix { 1.0f };
-
-    glm::vec3 m_camPos{ 0.f };
 };
 
 int main()
