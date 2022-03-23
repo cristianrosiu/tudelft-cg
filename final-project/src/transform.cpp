@@ -1,5 +1,5 @@
 #include "transform.h"
-
+#include <iostream>
 
 glm::mat4 Transform::getLocalModelMatrix()
 {
@@ -48,9 +48,9 @@ void Transform::setLocalScale(const glm::vec3& newScale)
     m_isDirty = true;
 }
 
-const glm::vec3& Transform::getGlobalPosition() const
+const glm::vec3 Transform::getGlobalPosition()
 {
-    return m_modelMatrix[3];
+    return glm::vec3(m_modelMatrix[3]);
 }
 
 const glm::vec3& Transform::getLocalPosition()
@@ -102,4 +102,9 @@ glm::vec3 Transform::getGlobalScale() const
 bool Transform::isDirty() const
 {
     return m_isDirty;
+}
+
+void Transform::markDirty(bool const& value)
+{
+    m_isDirty = value;
 }

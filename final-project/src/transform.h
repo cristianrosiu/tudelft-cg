@@ -34,7 +34,7 @@ class Transform
         void setLocalRotation(const glm::vec3& newRotation);
         void setLocalScale(const glm::vec3& newScale);
 
-        const glm::vec3& getGlobalPosition() const;
+        const glm::vec3 getGlobalPosition();
         const glm::vec3& getLocalPosition();
         const glm::vec3& getLocalRotation();
         const glm::vec3& getLocalScale();
@@ -45,6 +45,7 @@ class Transform
         glm::vec3 getForward() const;
         glm::vec3 getGlobalScale() const;
         bool isDirty() const;
+        void markDirty(bool const &value);
 };
 
 #endif

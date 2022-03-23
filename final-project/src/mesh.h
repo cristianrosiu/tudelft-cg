@@ -25,6 +25,7 @@ class GPUMesh {
 
     std::vector<Vertex> d_vertices;
     std::vector<glm::uvec3> d_triangles;
+    Material material;
     Texture d_diffuseTexture{"resources/checkerboard.png"};
 
 public:

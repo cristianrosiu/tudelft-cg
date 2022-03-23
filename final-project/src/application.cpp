@@ -23,7 +23,7 @@ DISABLE_WARNINGS_POP()
 #include <stack>
 #include <queue>
 #include "shadowmap.h"
-//#include "utility.h"
+#include "utility.h"
 #include "player.h"
 #include "boss.h"
 
@@ -64,28 +64,49 @@ public:
     {
         GLfloat lastFrame = (GLfloat)glfwGetTime();
 
-        m_light.position = glm::vec3(3.f, 10.f, 0.f);
-        m_light.viewMatrix = glm::lookAt(m_light.position, glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f));
+        // Main light
+        m_lights[0].position = glm::vec3(5.f, 4.f, 5.f);
+        m_lights[0].viewMatrix = glm::lookAt(m_lights[0].position, glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f));
+        m_lights[0].color = glm::vec3(1.f, 0.f, 0.0f);
 
-        ShadowMap shadowMap{ glm::uvec2(2048, 2048) };
+        // Boss light
+        m_lights[1].position = glm::vec3(-5.f, 4.f, -5.f);
+        m_lights[1].viewMatrix = glm::lookAt(m_lights[1].position, glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f));
+        m_lights[1].color = glm::vec3(0.f, 0.f, 1.f);
 
         Player player{ "./resources/animation", &m_window, m_projectionMatrix };
-        Boss boss{ "./resources/boss/body", "./resources/boss/head", 3};
+        player.material.kd = glm::vec3(0.8f);
+        player.material.ks = glm::vec3(0.5f);
+        player.material.shininess = 32.f;
+
+        Boss boss{ "./resources/boss/body", "./resources/boss/head", 3, &player};
         GameObject floor{ "./resources/floor" };
+        floor.material.kd = glm::vec3(0.8f);
+        floor.material.ks = glm::vec3(0.2f);
+        floor.material.shininess = 10.f;
+
 
         while (!m_window.shouldClose()) {
             m_window.updateInput();
+
+
+            m_lights[1].position = boss.getLastPosition() + glm::vec3(0.f, 4.f, 0.f);
+            m_lights[1].viewMatrix = glm::lookAt(m_lights[1].position, player.transform.getGlobalPosition(), glm::vec3(0.f, 1.f, 0.f));
 
             // Calculate DeltaTime of current frame
             GLfloat currentFrame = (GLfloat)glfwGetTime();
             m_deltaTime = (currentFrame - lastFrame);
             lastFrame = currentFrame;
 
-            shadowMap.renderShadowMap(m_shadowShader, m_projectionMatrix, m_light, player, floor);
+            // Compute the shadow map textures
+            for (int i = 0; i < 2; i++)
+                m_shadowMaps[i].renderShadowMap(m_shadowShader, m_projectionMatrix, m_lights[i], player, floor);
 
             m_defaultShader.bind();
 
-            shadowMap.bind(0, 6);
+            // Send the shadow map textures to GPU
+            m_defaultShader.setSampler("texShadow[0]", m_shadowMaps[0].getTextureID(), 0);
+            m_defaultShader.setSampler("texShadow[1]", m_shadowMaps[1].getTextureID(), 1);
 
             // Set viewport size
             glViewport(0, 0, m_window.getWindowSize().x, m_window.getWindowSize().y);
@@ -100,24 +121,46 @@ public:
             m_camPos = player.transform.getLocalPosition() + glm::vec3(0.f, 4.f, -4.f);
             m_viewMatrix = glm::lookAt(m_camPos, player.transform.getLocalPosition(), glm::vec3(0.f, 1.f, 0.f));
 
+            // Updates
             player.move(m_deltaTime);
             player.lookAt(m_camPos, m_viewMatrix);
+            boss.updateBoss();
 
-            m_defaultShader.setMatrix("mvpMatrix", m_projectionMatrix * m_viewMatrix * player.transform.getModelMatrix());
+            m_defaultShader.setMatrix("projectionMatrix", m_projectionMatrix);
+            m_defaultShader.setMatrix("viewMatrix", m_viewMatrix);
+            m_defaultShader.setVector("camPos", m_camPos);
+
+            for (int i = 0; i < 2; i++)
+            {
+                m_defaultShader.setVector("lights[" + std::to_string(i)+ "].position", m_lights[i].position);
+                m_defaultShader.setVector("lights[" + std::to_string(i) + "].color", m_lights[i].color);
+                m_defaultShader.setMatrix("lights[" + std::to_string(i) + "].viewMatrix", m_projectionMatrix * m_lights[i].viewMatrix * player.transform.getModelMatrix());
+            }
+
+            // Draw Player
             m_defaultShader.setMatrix("modelMatrix", player.transform.getModelMatrix());
-            m_defaultShader.setVector("lightPos", m_light.position);
-            m_defaultShader.setVector("camPos", m_camPos);
-            m_defaultShader.setMatrix("lightMVP", m_projectionMatrix * m_light.viewMatrix);
-            player.bindTexture(2, 3);
+            m_defaultShader.setVector("material.diffuse", player.material.kd);
+            m_defaultShader.setVector("material.specular", player.material.ks);
+            m_defaultShader.setFloat("material.shininess", player.material.shininess);
+            //player.bindTexture(2, 3);
             player.draw(m_defaultShader);
-            
-            m_defaultShader.setMatrix("mvpMatrix", m_projectionMatrix * m_viewMatrix * floor.transform.getModelMatrix());
+
+            for (int i = 0; i < 2; i++)
+            {
+                m_defaultShader.setVector("lights[" + std::to_string(i) + "].position", m_lights[i].position);
+                m_defaultShader.setVector("lights[" + std::to_string(i) + "].color", m_lights[i].color);
+                m_defaultShader.setMatrix("lights[" + std::to_string(i) + "].viewMatrix", m_projectionMatrix * m_lights[i].viewMatrix * floor.transform.getModelMatrix());
+            }
+            // Draw floor
+            m_defaultShader.setVector("material.diffuse", floor.material.kd);
+            m_defaultShader.setVector("material.specular", floor.material.ks);
+            m_defaultShader.setFloat("material.shininess", floor.material.shininess);
             m_defaultShader.setMatrix("modelMatrix", floor.transform.getModelMatrix());
-            m_defaultShader.setVector("lightPos", m_light.position);
-            m_defaultShader.setVector("camPos", m_camPos);
-            m_defaultShader.setMatrix("lightMVP", m_projectionMatrix * m_light.viewMatrix);
-            floor.bindTexture(1, 3);
+            //floor.bindTexture(3, 3);
             floor.draw(m_defaultShader);
+
+            boss.draw(m_defaultShader);
+
 
             // Processes input and swaps the window buffer
             m_window.swapBuffers();
@@ -168,6 +211,7 @@ public:
     }
 
 
+
 private:
     Window m_window;
 
@@ -175,7 +219,8 @@ private:
     Shader m_defaultShader;
     Shader m_shadowShader;
 
-    Light m_light;
+    ShadowMap m_shadowMaps[2]{ ShadowMap{glm::uvec2(2048)}, ShadowMap{glm::uvec2(2048)} };
+    Light m_lights[2];
 
     GLfloat m_deltaTime;
 

@@ -21,6 +21,7 @@ class ShadowMap
 
 		void renderShadowMap(Shader& shader, glm::mat4 const& projectionMatrix, Light light, GameObject &gameObjects,...);
 		void bind(int slot, int location);
+		GLuint const getTextureID() const;
 };
 
 #endif

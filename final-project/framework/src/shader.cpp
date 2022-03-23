@@ -82,6 +82,14 @@ void Shader::setVector(const std::string& name, const glm::vec2& value) const
     glUniform2fv(glGetUniformLocation(m_program, name.c_str()), 1, glm::value_ptr(value));
 } 
 
+void Shader::setSampler(const std::string& name, GLuint texture, int const& slot) const
+{
+    // Bind the shadow map to texture slot 0
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glUniform1i(glGetUniformLocation(m_program, name.c_str()), slot);
+} 
+
 void Shader::bind() const
 {
     assert(m_program != invalid);

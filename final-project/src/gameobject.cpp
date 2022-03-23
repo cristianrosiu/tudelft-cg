@@ -9,19 +9,23 @@ GameObject::GameObject(std::filesystem::path const& path, std::vector<Texture> t
     : Model(path)
 {}
 
-template<typename... TArgs>
-void GameObject::addChild(const TArgs&... args)
+//template<typename... TArgs>
+//void GameObject::addChild(const TArgs&... args)
+void GameObject::addChild(std::filesystem::path const& path)
 {
-    children.emplace_back(std::make_unique<GameObject>(args...));
+    children.emplace_back(std::make_unique<GameObject>(path));
     children.back()->parent = this;
 }
 
 void GameObject::updateSelfAndChild()
 {
-    if (!transform.isDirty())
-        return;
-
-    forceUpdateSelfAndChild();
+    if (transform.isDirty())
+        forceUpdateSelfAndChild();
+    else
+    {
+        for (auto&& child : children)
+            child->forceUpdateSelfAndChild();
+    }
 }
 
 void GameObject::forceUpdateSelfAndChild()
@@ -31,7 +35,11 @@ void GameObject::forceUpdateSelfAndChild()
     else
         transform.updateModelMatrix();
 
+    transform.markDirty(false);
     for (auto&& child : children)
+    {
+        child->transform.markDirty(true);
         child->forceUpdateSelfAndChild();
+    }
 
 }

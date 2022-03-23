@@ -14,6 +14,8 @@ public:
 
     void draw(Shader& shader);
     void bindTexture(int slot, int location);
+
+    Material material;
     //GPUMesh const getMeshes(int index) const;
 private:
     std::vector<GPUMesh> m_meshes;

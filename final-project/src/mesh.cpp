@@ -24,6 +24,9 @@ GPUMesh::GPUMesh(std::filesystem::path filePath, std::filesystem::path texture)
     
     this->d_vertices  = cpuMesh.vertices;
     this->d_triangles = cpuMesh.triangles;
+    this->material = cpuMesh.material;
+
+    std::cout << material.kd.x << " " << material.ks.x << " " << "\n\n";
 
     setupMesh();
 }

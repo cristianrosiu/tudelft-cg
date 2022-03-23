@@ -42,8 +42,10 @@ void ShadowMap::renderShadowMap(Shader& shader, glm::mat4 const& projectionMatri
 
     // Draw Scene
     va_start(valist, &gameObject);
-        auto lightMVP = projectionMatrix * light.viewMatrix * gameObject.transform.getModelMatrix();
-        shader.setMatrix("mvpMatrix", lightMVP);
+        //auto lightMVP = projectionMatrix * light.viewMatrix * gameObject.transform.getModelMatrix();
+        shader.setMatrix("projectionMatrix", projectionMatrix);
+        shader.setMatrix("viewMatrix", light.viewMatrix);
+        shader.setMatrix("modelMatrix", gameObject.transform.getModelMatrix());
         gameObject.draw(shader);
     va_end(valist);
     
@@ -52,10 +54,7 @@ void ShadowMap::renderShadowMap(Shader& shader, glm::mat4 const& projectionMatri
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void ShadowMap::bind(int slot, int location)
+GLuint const ShadowMap::getTextureID() const
 {
-    // Bind the shadow map to texture slot 0
-    glActiveTexture(GL_TEXTURE0 + slot);
-    glBindTexture(GL_TEXTURE_2D, m_texShadow);
-    glUniform1i(location, slot);
+    return m_texShadow;
 }

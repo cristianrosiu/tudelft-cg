@@ -34,6 +34,7 @@ public:
     void setMatrix(const std::string& name, const glm::mat3& value) const;
     void setVector(const std::string& name, const glm::vec3& value) const;
     void setVector(const std::string& name, const glm::vec2& value) const;
+    void setSampler(const std::string& name, GLuint texture, int const& slot) const;
 
     void bind() const;
 
