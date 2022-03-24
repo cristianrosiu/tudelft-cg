@@ -79,7 +79,7 @@ void Boss::updateBoss(float deltaTime)
 		inverseJacobian = glm::transpose(jacobian);
 		
 
-	float speed = (glm::distance(targetPos, lastPos) > 2.f) ? 0.002 : 0.05f;
+	float speed = (glm::distance(targetPos, lastPos) > 2.5f) ? 0.003f : 0.05f;
 	glm::vec3 angles = inverseJacobian*((targetPos - lastPos)*speed);
 	
 	if (glm::distance(targetPos, lastPos) < 1.5f)

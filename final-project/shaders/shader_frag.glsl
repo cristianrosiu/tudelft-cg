@@ -60,13 +60,11 @@ vec3 calcLight(Light light)
     float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
     vec3 specular = light.color * (spec * material.specular);
 
-    return (diffuse + specular);
+    return  (diffuse + specular)*att;
 } 
 
 float calcShadowPCF(vec4 fragLightCoord, int i)
 {
-    //if (fragLightCoord.z < 0 || fragLightCoord.z > 1.0)
-    //    return 0.0;
     const vec2 offset = 1.0 / textureSize(texShadow[i], 0);
     const int pcfCount = 6;
     const float totalTexels = (pcfCount * 2.0 + 1.0)*(pcfCount * 2.0 + 1.0);
@@ -130,10 +128,11 @@ void main()
 
         float intensity = distFromCenter > 0.5 ? 0.0 : (0.5 - distFromCenter)*2;
 
+
         float shadow = calcShadowPCF(fragLightCoord, i);
         if(isPlayer == 1 && intensity != 0.0 && i == 1)
         {
-            lighting = vec3(1.0, 0.0, 0.0) * (1 - shadow) * pow(intensity, 2.0);
+            lighting = vec3(0.8, 0.0, 0.0);
             break;
         }
         if (i == 1)
@@ -141,6 +140,7 @@ void main()
         else
             lighting += calcLight(lights[i]) * (1 - shadow);
     }
+    
 
     if (texToonActive == 1)
         fragColor = vec4(texture(texShadow[2], vec2(lighting.x, bossHP * 512).xy).rgb, 1.0);

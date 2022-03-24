@@ -109,7 +109,7 @@ public:
             // Set viewport size
             glViewport(0, 0, m_window.getWindowSize().x, m_window.getWindowSize().y);
             glClearDepth(1.0f);
-            glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glDisable(GL_CULL_FACE);
             glEnable(GL_DEPTH_TEST);
@@ -119,47 +119,23 @@ public:
             glUniform1i(2, 0);
             glUniform1i(4, 0);
 
-            // Send the shadow map textures to GPU
-            m_defaultShader.setSampler("texShadow[0]", m_shadowMaps[0].getTextureID(), 0);
-            m_defaultShader.setSampler("texShadow[1]", m_shadowMaps[1].getTextureID(), 1);
+            configureUniforms();
 
-
-            m_defaultShader.setMatrix("projectionMatrix", m_projectionMatrix);
-            m_defaultShader.setMatrix("viewMatrix", m_cameras[activeCamera].viewMatrix);
-            m_defaultShader.setVector("camPos", m_cameras[activeCamera].position);
-
+            // Draw dungeon
             for (int i = 0; i < 2; i++)
-            {
-                m_defaultShader.setVector("lights[" + std::to_string(i) + "].position", m_lights[i].position);
-                m_defaultShader.setVector("lights[" + std::to_string(i) + "].color", m_lights[i].color);
-                m_defaultShader.setFloat("lights[" + std::to_string(i) + "].radius", m_lights[i].radius);
                 m_defaultShader.setMatrix("lights[" + std::to_string(i) + "].viewMatrix", m_projectionMatrix * m_lights[i].viewMatrix * dugeon.transform.getModelMatrix());
-            }
-            // Draw floor
-            m_defaultShader.setVector("material.diffuse", dugeon.material.kd);
-            m_defaultShader.setVector("material.specular", dugeon.material.ks);
-            m_defaultShader.setFloat("material.shininess", dugeon.material.shininess);
+            configureMaterialUniforms(dugeon);
             m_defaultShader.setMatrix("modelMatrix", dugeon.transform.getModelMatrix());
-            //floor.bindTexture(3, 3);
             dugeon.draw(m_defaultShader);
 
-            for (int i = 0; i < 2; i++)
-            {
-                m_defaultShader.setVector("lights[" + std::to_string(i) + "].position", m_lights[i].position);
-                m_defaultShader.setVector("lights[" + std::to_string(i) + "].color", m_lights[i].color);
-                m_defaultShader.setFloat("lights[" + std::to_string(i) + "].radius", m_lights[i].radius);
-                m_defaultShader.setMatrix("lights[" + std::to_string(i) + "].viewMatrix", m_projectionMatrix * m_lights[i].viewMatrix * dugeon.transform.getModelMatrix());
-            }
-
             // Draw Player
+            for (int i = 0; i < 2; i++)
+                m_defaultShader.setMatrix("lights[" + std::to_string(i) + "].viewMatrix", m_projectionMatrix * m_lights[i].viewMatrix * dugeon.transform.getModelMatrix());
+            configureMaterialUniforms(player);
             m_defaultShader.setMatrix("modelMatrix", player.transform.getModelMatrix());
-            m_defaultShader.setVector("material.diffuse", player.material.kd);
-            m_defaultShader.setVector("material.specular", player.material.ks);
-            m_defaultShader.setFloat("material.shininess", player.material.shininess);
             glUniform1i(4, 1);
             //player.bindTexture(2, 3);
             player.draw(m_defaultShader);
-
 
            if (textoonActive) {
                m_defaultShader.setSampler("texShadow[2]", m_toonTexture.getTextureID(), 3);
@@ -199,23 +175,6 @@ public:
 
     }
 
-    void showUI()
-    {
-        ImGui::Begin("Restart Button");
-        if (ImGui::Button("Restart"))
-            restart();
-
-        ImGui::End();
-        // Use ImGui for easy input/output of ints, floats, strings, etc...
-        ImGui::Begin("Player Stats");
-        ImGui::Text("Player Health: %i", player.getHealth()); // Use C printf fImGui::Begin("Window");ormatting rules (%i is a signed integer)
-        ImGui::End();
-
-        ImGui::Begin("Boss Stats");
-        ImGui::Text("Boss Health: %i", boss.getHealth()); // Use C printf fImGui::Begin("Window");ormatting rules (%i is a signed integer)
-        ImGui::End();
-    }
-
     // If one of the mouse buttons is pressed this function will be called
     // button - Integer that corresponds to numbers in https://www.glfw.org/docs/latest/group__buttons.html
     // mods - Any modifier buttons pressed
@@ -236,6 +195,48 @@ public:
     {
     }
 
+    void configureMaterialUniforms(GameObject& gameObject)
+    {
+        m_defaultShader.setVector("material.ambient", gameObject.material.ka);
+        m_defaultShader.setVector("material.diffuse", gameObject.material.kd);
+        m_defaultShader.setVector("material.specular", gameObject.material.ks);
+        m_defaultShader.setFloat("material.shininess", gameObject.material.shininess);
+    }
+
+    void configureUniforms()
+    {
+        // Send the shadow map textures to GPU
+        m_defaultShader.setSampler("texShadow[0]", m_shadowMaps[0].getTextureID(), 0);
+        m_defaultShader.setSampler("texShadow[1]", m_shadowMaps[1].getTextureID(), 1);
+        m_defaultShader.setMatrix("projectionMatrix", m_projectionMatrix);
+        m_defaultShader.setMatrix("viewMatrix", m_cameras[activeCamera].viewMatrix);
+        m_defaultShader.setVector("camPos", m_cameras[activeCamera].position);
+
+        for (int i = 0; i < 2; i++)
+        {
+            m_defaultShader.setVector("lights[" + std::to_string(i) + "].position", m_lights[i].position);
+            m_defaultShader.setVector("lights[" + std::to_string(i) + "].color", m_lights[i].color);
+            m_defaultShader.setFloat("lights[" + std::to_string(i) + "].radius", m_lights[i].radius);
+        }
+    }
+
+    void showUI()
+    {
+        ImGui::Begin("Restart Button");
+        if (ImGui::Button("Restart"))
+            restart();
+
+        ImGui::End();
+        // Use ImGui for easy input/output of ints, floats, strings, etc...
+        ImGui::Begin("Player Stats");
+        ImGui::Text("Player Health: %i", player.getHealth()); // Use C printf fImGui::Begin("Window");ormatting rules (%i is a signed integer)
+        ImGui::End();
+
+        ImGui::Begin("Boss Stats");
+        ImGui::Text("Boss Health: %i", boss.getHealth()); // Use C printf fImGui::Begin("Window");ormatting rules (%i is a signed integer)
+        ImGui::End();
+    }
+
     void restart()
     {
         isCutscene = false;
@@ -251,6 +252,7 @@ public:
 
     void initializeScene()
     {
+        player.material.ka = glm::vec3(0.15f);
         player.material.kd = glm::vec3(0.8f);
         player.material.ks = glm::vec3(0.5f);
         player.material.shininess = 10.f;
@@ -259,10 +261,10 @@ public:
         player.updateSelfAndChild();
 
         // Main light
-        m_lights[0].position = glm::vec3(0.f, 20.f, 0.f);
-        m_lights[0].color = glm::vec3(0.5f);
-        m_lights[0].radius = 12.f;
-        m_lights[0].viewMatrix = glm::lookAt(m_lights[0].position, player.transform.getLocalPosition(), glm::vec3(0.f, 1.f, 0.f));
+        m_lights[0].position = glm::vec3(-10.f, 5.f, 0.f);
+        m_lights[0].color = glm::vec3(0.5f, 0.5f, 0.5f);
+        m_lights[0].radius = 30.f;
+        m_lights[0].viewMatrix = glm::lookAt(m_lights[0].position, glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f));
 
         // Boss light
         m_lights[1].color = glm::vec3(0.f, 0.f, 1.f);
@@ -272,9 +274,10 @@ public:
         m_cameras[1].position = glm::vec3(3.f, 10.f, -5.f);
         m_cameras[1].viewMatrix = glm::lookAt(m_cameras[1].position, glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f));
 
+        dugeon.material.ka = glm::vec3(0.15f);
         dugeon.material.kd = glm::vec3(0.8f);
         dugeon.material.ks = glm::vec3(0.2f);
-        dugeon.material.shininess = 10.f;
+        dugeon.material.shininess = 0.f;
     }
 
     void onGameOver()
