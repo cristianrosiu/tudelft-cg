@@ -2,8 +2,9 @@
 #include "gameobject.h"
 #include <iostream>
 
-Boss::Boss(std::vector<std::filesystem::path> components, Player* player)
-	: m_root(components[0]), m_player(player)
+Boss::Boss(std::vector<std::filesystem::path> components, Player* player, 
+	std::filesystem::path const& baseColorTexture, std::filesystem::path const& specularTexture)
+	: m_root(components[0]), m_player(player), baseColorTexture(baseColorTexture), specularTexture(specularTexture)
 {
 	createBoss(components);
 }
@@ -12,8 +13,8 @@ void Boss::createBoss(std::vector<std::filesystem::path> components)
 {
 	// Small body
 	GameObject* lastEntity = &m_root;
-	m_root.transform.setLocalScale(glm::vec3(0.5f));
-	m_root.transform.setLocalPosition(glm::vec3(0.f, 2.f, 0.f));
+	//m_root.transform.setLocalScale(glm::vec3(0.5f));
+	//m_root.transform.setLocalPosition(glm::vec3(0.f, 0.f, 0.f));
 	lastEntity->addChild(components[1]);
 	
 	// Medium body
@@ -22,11 +23,16 @@ void Boss::createBoss(std::vector<std::filesystem::path> components)
 	//lastEntity->transform.setLocalScale(glm::vec3(0.5f));
 	lastEntity->addChild(components[2]);
 
-	// Head
+	// Large body
 	lastEntity = lastEntity->children.back().get();
 	lastEntity->transform.setLocalPosition(glm::vec3(0.f, 0.f, -1.f));
 	//lastEntity->transform.setLocalScale(glm::vec3(0.5f));
 	lastEntity->addChild(components[3]);
+
+	lastEntity = lastEntity->children.back().get();
+	lastEntity->transform.setLocalPosition(glm::vec3(0.f, 0.f, -1.f));
+	//lastEntity->transform.setLocalScale(glm::vec3(0.5f));
+	//lastEntity->addChild(components[3]);
 
 	m_root.updateSelfAndChild();
 }
@@ -106,6 +112,15 @@ void Boss::updateBoss(float deltaTime)
 	
 }
 
+void Boss::idleBoss() {
+	m_root.transform.setLocalRotation(m_root.transform.getLocalRotation() + glm::vec3(0.f, 5.f, 0.f));
+	m_root.updateSelfAndChild();
+}
+
+glm::vec3 Boss::getRootPosition() {
+	return m_root.transform.getLocalPosition();
+}
+
 void Boss::draw(Shader &shader)
 {
 	GameObject* lastEntity = &m_root;
@@ -136,4 +151,12 @@ std::queue<glm::vec3> Boss::getGradients()
 	}
 
 	return dms;
+}
+
+int Boss::getBaseColorTexture() {
+	return baseColorTexture.getTextureID();
+}
+
+int Boss::getSpecularTexture() {
+	return specularTexture.getTextureID();
 }

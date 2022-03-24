@@ -93,7 +93,10 @@ public:
                 m_cameras[activeCamera].viewMatrix = glm::lookAt(m_cameras[activeCamera].position, player.transform.getLocalPosition(), glm::vec3(0.f, 1.f, 0.f));
                 player.update(m_cameras[activeCamera].position, m_cameras[activeCamera].viewMatrix, m_deltaTime);
             }
-            boss.updateBoss(m_deltaTime);
+            if (glm::distance(player.transform.getLocalPosition(), boss.getLastPosition()) > 4.f)
+                boss.idleBoss();
+            else
+                boss.updateBoss(m_deltaTime);
 
             m_lights[1].position = boss.getLastPosition() + glm::vec3(0.f, 3.f, 0.f);
             m_lights[1].viewMatrix = glm::lookAt(m_lights[1].position, m_lights[1].position + boss.getLastForward() - glm::vec3(0.f, 1.f, 0.f) , glm::vec3(0.f, 1.f, 0.f));
@@ -148,16 +151,19 @@ public:
                 glUniform1f(3, boss.getHealth() / 50);
             }  
             glUniform1i(4, 0);
+            m_defaultShader.setSampler("texShadow[7]", boss.getBaseColorTexture(), 6);
+            m_defaultShader.setSampler("texShadow[8]", boss.getSpecularTexture(), 7);
+            glUniform1i(6, 1);
             boss.draw(m_defaultShader);
-
+            glUniform1i(6, 0);
             // Draw smoke texture flying around 
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);     
            
-            smoke1.transform.setLocalPosition( glm::vec3(std::sin(glfwGetTime() * 0.1) * 3, 1.f, 0.f));
+            smoke1.transform.setLocalPosition( glm::vec3(std::sin(glfwGetTime() * 0.1) * 3, 0.2f, 0.f));
             smoke1.updateSelfAndChild();
 
-            smoke2.transform.setLocalPosition(glm::vec3(-std::sin(glfwGetTime() * 0.1) * 3, 2.f, 0.f));
+            smoke2.transform.setLocalPosition(glm::vec3(-std::sin(glfwGetTime() * 0.1) * 3, 0.25f, 0.f));
             smoke2.updateSelfAndChild();
            
 
@@ -373,7 +379,8 @@ private:
     glm::mat4 m_modelMatrix { 1.0f };
 
     Player player{ "./resources/animation_run", &m_window, m_projectionMatrix, "resources/player-basecolor.jpg", "resources/player-specular.jpg" };
-    Boss boss{ std::vector<std::filesystem::path>{"./resources/boss/bodySmall", "./resources/boss/bodyMedium", "./resources/boss/bodyLarge", "./resources/boss/head"}, &player};
+    Boss boss{ std::vector<std::filesystem::path>{"./resources/boss/bodySmall", "./resources/boss/bodyMedium", "./resources/boss/bodyLarge", "./resources/boss/head"}, &player, 
+            "resources/rock-baseColor2.jpg", "resources/player-specular.jpg" };
     GameObject dugeon{ "./resources/dungeon" };
     GameObject smoke1 { "./resources/floor" , "resources/smoke.png" };
     GameObject smoke2 { "./resources/floor" , "resources/smoke2.png" };

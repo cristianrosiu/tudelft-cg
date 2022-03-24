@@ -21,7 +21,7 @@ uniform Light lights[NR_LIGHTS];
 
 uniform bool hasTexCoords;
 uniform sampler2D colorMap;
-uniform sampler2D texShadow[7];
+uniform sampler2D texShadow[9];
 
 uniform mat4 lightMVP;
 uniform vec3 lightPos;
@@ -31,6 +31,7 @@ layout(location = 2) uniform int texToonActive;
 layout(location = 3) uniform float bossHP;
 layout(location = 4) uniform int isPlayer;
 layout(location = 5) uniform int isTransparent;
+layout(location = 6) uniform int isBoss;
 
 in vec3 fragPos;
 in vec3 fragNormal;
@@ -64,6 +65,9 @@ vec3 calcLight(Light light)
     if (isPlayer == 1) {
         diffuse = light.color * (diff * texture(texShadow[5], fragTexCoord.xy).rgb);
         specular = light.color * (spec * texture(texShadow[6], fragTexCoord.xy).rgb);
+    } else if (isBoss == 1) {
+        diffuse = light.color * (diff * texture(texShadow[7], fragTexCoord.xy).rgb);
+        specular = light.color * (spec * texture(texShadow[8], fragTexCoord.xy).rgb);
     } else {
         diffuse = light.color * (diff * material.diffuse);
         specular = light.color * (spec * material.specular);
