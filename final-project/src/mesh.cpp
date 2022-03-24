@@ -105,7 +105,7 @@ void GPUMesh::draw(Shader &shader)
 {
     glBindVertexArray(d_vao);
     glDrawElements(GL_TRIANGLES, d_numIndices, GL_UNSIGNED_INT, nullptr);
-    //glBindVertexArray(0);
+    glBindVertexArray(0);
 }   
 
 void GPUMesh::bindTexture(int slot, int location)

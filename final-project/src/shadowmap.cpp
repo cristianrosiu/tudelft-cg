@@ -25,7 +25,7 @@ ShadowMap::ShadowMap(glm::uvec2 const& size)
     m_size = size;
 }
 
-void ShadowMap::renderShadowMap(Shader& shader, glm::mat4 const& projectionMatrix, Light light, GameObject &gameObject,...)
+void ShadowMap::renderShadowMap(Shader& shader, glm::mat4 const& projectionMatrix, Light light, GameObject& gameObject1, GameObject& gameObject2, Boss& boss)
 {
     va_list valist;
     // Bind the off-screen framebuffer
@@ -42,18 +42,26 @@ void ShadowMap::renderShadowMap(Shader& shader, glm::mat4 const& projectionMatri
     shader.bind();
 
     // Draw Scene
-    va_start(valist, &gameObject);
         //auto lightMVP = projectionMatrix * light.viewMatrix * gameObject.transform.getModelMatrix();
         shader.setMatrix("projectionMatrix", projectionMatrix);
         shader.setMatrix("viewMatrix", light.viewMatrix);
-        shader.setMatrix("modelMatrix", gameObject.transform.getModelMatrix());
+        shader.setMatrix("modelMatrix", gameObject1.transform.getModelMatrix());
 
         // This is very bad practice because it breaks Liskov Principle but works for now
-        if (dynamic_cast<Player*>(&gameObject) != nullptr)
-            dynamic_cast<Player*>(&gameObject)->draw(shader);
+        if (dynamic_cast<Player*>(&gameObject1) != nullptr)
+            dynamic_cast<Player*>(&gameObject1)->draw(shader);
         else
-            gameObject.draw(shader);
-    va_end(valist);
+            gameObject1.draw(shader);
+
+        shader.setMatrix("modelMatrix", gameObject2.transform.getModelMatrix());
+
+        // This is very bad practice because it breaks Liskov Principle but works for now
+        if (dynamic_cast<Player*>(&gameObject2) != nullptr)
+            dynamic_cast<Player*>(&gameObject2)->draw(shader);
+        else
+            gameObject2.draw(shader);
+
+        boss.draw(shader);
     
 
     // Unbind the off-screen framebuffer

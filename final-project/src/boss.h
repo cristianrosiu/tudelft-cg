@@ -3,6 +3,10 @@
 #include <queue>
 #include "player.h"
 
+#ifndef BOSS_H
+#define BOSS_H
+
+
 class Boss: public Entity
 {
 	GameObject m_root;
@@ -25,3 +29,5 @@ class Boss: public Entity
 		glm::vec3 const& getLastForward();
 		void updateBoss(float deltaTime);
 };
+
+#endif

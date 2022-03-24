@@ -77,9 +77,16 @@ void Boss::updateBoss(float deltaTime)
 		inverseJacobian = glm::inverse(jacobian * glm::transpose(jacobian));
 	else
 		inverseJacobian = glm::transpose(jacobian);
+		
 
 	float speed = (glm::distance(targetPos, lastPos) > 2.f) ? 0.002 : 0.05f;
 	glm::vec3 angles = inverseJacobian*((targetPos - lastPos)*speed);
+	
+	if (glm::distance(targetPos, lastPos) < 1.5f)
+	{
+		m_player->transform.setLocalPosition(m_player->transform.getLocalPosition() + getLastForward()*2.f);
+		m_player->setHealth(-5);
+	}
 	
 	int i = 0;
 	GameObject* lastEntity = &m_root;

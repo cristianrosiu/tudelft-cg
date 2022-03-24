@@ -29,13 +29,14 @@ public:
 
     GLuint const getTextureID() const;
     TextureType const getType() const;
-
+    int m_width, m_height;
     //void bind(GLint textureSlot, GLint active);
 
 private:
     static constexpr GLuint INVALID = 0xFFFFFFFF;
     GLuint m_texture{ INVALID };
     TextureType m_type{ TextureType::DIFFUSE };
+
 };
 
 #endif

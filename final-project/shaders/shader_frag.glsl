@@ -3,6 +3,7 @@
 #define NR_LIGHTS 2 
 
 struct Material {
+    vec3 ambient;
     vec3 diffuse;
     vec3 specular;
     float shininess;
@@ -20,12 +21,15 @@ uniform Light lights[NR_LIGHTS];
 
 uniform bool hasTexCoords;
 uniform sampler2D colorMap;
-uniform sampler2D texShadow[NR_LIGHTS];
+uniform sampler2D texShadow[3];
 
 uniform mat4 lightMVP;
 uniform vec3 lightPos;
 uniform vec3 bossLight;
 uniform vec3 camPos;
+layout(location = 2) uniform int texToonActive;
+layout(location = 3) uniform float bossHP;
+layout(location = 4) uniform int isPlayer;
 
 in vec3 fragPos;
 in vec3 fragNormal;
@@ -56,7 +60,7 @@ vec3 calcLight(Light light)
     float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
     vec3 specular = light.color * (spec * material.specular);
 
-    return (diffuse + specular)*att;
+    return (diffuse + specular);
 } 
 
 float calcShadowPCF(vec4 fragLightCoord, int i)
@@ -127,13 +131,20 @@ void main()
         float intensity = distFromCenter > 0.5 ? 0.0 : (0.5 - distFromCenter)*2;
 
         float shadow = calcShadowPCF(fragLightCoord, i);
+        if(isPlayer == 1 && intensity != 0.0 && i == 1)
+        {
+            lighting = vec3(1.0, 0.0, 0.0) * (1 - shadow) * pow(intensity, 2.0);
+            break;
+        }
         if (i == 1)
             lighting += calcLight(lights[i]) * (1 - shadow) * pow(intensity, 2.0);
         else
             lighting += calcLight(lights[i]) * (1 - shadow);
     }
 
-    if (hasTexCoords)
+    if (texToonActive == 1)
+        fragColor = vec4(texture(texShadow[2], vec2(lighting.x, bossHP * 512).xy).rgb, 1.0);
+    else if (hasTexCoords)
         fragColor = vec4(lighting*texture(colorMap, fragTexCoord.xy).rgb, 1.0);
     else
         fragColor = vec4(lighting, 1.0);
