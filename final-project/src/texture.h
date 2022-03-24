@@ -20,6 +20,7 @@ class Texture {
 public:
     Texture(std::filesystem::path filePath);
     Texture(std::filesystem::path filePath, TextureType type);
+    Texture(std::filesystem::path filePath, bool IsRGBA);
     Texture(const Texture&) = delete;
     Texture(Texture&&);
     ~Texture();

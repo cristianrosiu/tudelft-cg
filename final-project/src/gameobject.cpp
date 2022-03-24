@@ -1,11 +1,21 @@
 #include "gameobject.h"
 
 GameObject::GameObject()
-    : Model()
+    : Model(), rgbaTexture("resources/checkboard.png"), baseColorTexture("resources/checkboard.png"), specularTexture("resources/checkboard.png")
 {}
 
 GameObject::GameObject(std::filesystem::path const& path)
-    : Model(path)
+    : Model(path), rgbaTexture("resources/checkboard.png"), baseColorTexture("resources/checkboard.png"), specularTexture("resources/checkboard.png")
+{}
+
+GameObject::GameObject(std::filesystem::path const& path, std::filesystem::path const& rgbaTexture)
+    : Model(path), rgbaTexture(rgbaTexture, true), baseColorTexture("resources/checkboard.png"), specularTexture("resources/checkboard.png")
+{}
+
+GameObject::GameObject(std::filesystem::path const& path, 
+                        std::filesystem::path const& baseColorTexture,
+                        std::filesystem::path const& specularTexture)
+    : Model(path), rgbaTexture("resources/checkboard.png"), baseColorTexture(baseColorTexture), specularTexture(specularTexture)
 {}
 
 //template<typename... TArgs>
@@ -41,4 +51,16 @@ void GameObject::forceUpdateSelfAndChild()
         child->forceUpdateSelfAndChild();
     }
 
+}
+
+int GameObject::getBaseColorTexture() {
+    return baseColorTexture.getTextureID();
+}
+
+int GameObject::getSpecularTexture() {
+    return specularTexture.getTextureID();
+}
+
+int GameObject::getRgbaTexture() {
+    return rgbaTexture.getTextureID();
 }

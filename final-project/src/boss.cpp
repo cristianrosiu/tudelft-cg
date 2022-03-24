@@ -2,26 +2,31 @@
 #include "gameobject.h"
 #include <iostream>
 
-Boss::Boss(std::filesystem::path const& body, std::filesystem::path const& head, int const& layers, Player* player)
-	: m_root(body), m_size(layers), m_player(player)
+Boss::Boss(std::vector<std::filesystem::path> components, Player* player)
+	: m_root(components[0]), m_player(player)
 {
-	createBoss(body, head);
+	createBoss(components);
 }
 
-void Boss::createBoss(std::filesystem::path const& body, std::filesystem::path const& head)
+void Boss::createBoss(std::vector<std::filesystem::path> components)
 {
+	// Small body
 	GameObject* lastEntity = &m_root;
+	m_root.transform.setLocalScale(glm::vec3(0.5f));
+	m_root.transform.setLocalPosition(glm::vec3(0.f, 2.f, 0.f));
+	lastEntity->addChild(components[1]);
+	
+	// Medium body
+	lastEntity = lastEntity->children.back().get();
+	lastEntity->transform.setLocalPosition(glm::vec3(0.f, 0.f, -1.f));
+	//lastEntity->transform.setLocalScale(glm::vec3(0.5f));
+	lastEntity->addChild(components[2]);
 
-	for (int i = 0; i < m_size; ++i)
-	{
-		if (i == m_size-1)
-			lastEntity->addChild(body);
-		else
-			lastEntity->addChild(body);
-		
-		lastEntity = lastEntity->children.back().get();
-		lastEntity->transform.setLocalPosition(glm::vec3(0.f, 0.f, -1.f));
-	}
+	// Head
+	lastEntity = lastEntity->children.back().get();
+	lastEntity->transform.setLocalPosition(glm::vec3(0.f, 0.f, -1.f));
+	//lastEntity->transform.setLocalScale(glm::vec3(0.5f));
+	lastEntity->addChild(components[3]);
 
 	m_root.updateSelfAndChild();
 }

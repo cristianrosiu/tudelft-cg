@@ -21,7 +21,7 @@ uniform Light lights[NR_LIGHTS];
 
 uniform bool hasTexCoords;
 uniform sampler2D colorMap;
-uniform sampler2D texShadow[3];
+uniform sampler2D texShadow[7];
 
 uniform mat4 lightMVP;
 uniform vec3 lightPos;
@@ -30,6 +30,7 @@ uniform vec3 camPos;
 layout(location = 2) uniform int texToonActive;
 layout(location = 3) uniform float bossHP;
 layout(location = 4) uniform int isPlayer;
+layout(location = 5) uniform int isTransparent;
 
 in vec3 fragPos;
 in vec3 fragNormal;
@@ -54,11 +55,19 @@ vec3 calcLight(Light light)
 
     // Diffuse
     float diff = max(dot(lightDir, normal), 0.0);
-    vec3 diffuse = light.color * (diff * material.diffuse);
+    vec3 diffuse; // = light.color * (diff * material.diffuse);
 
     // Specular
     float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
-    vec3 specular = light.color * (spec * material.specular);
+    vec3 specular;
+
+    if (isPlayer == 1) {
+        diffuse = light.color * (diff * texture(texShadow[5], fragTexCoord.xy).rgb);
+        specular = light.color * (spec * texture(texShadow[6], fragTexCoord.xy).rgb);
+    } else {
+        diffuse = light.color * (diff * material.diffuse);
+        specular = light.color * (spec * material.specular);
+    } 
 
     return  (diffuse + specular)*att;
 } 
@@ -141,8 +150,9 @@ void main()
             lighting += calcLight(lights[i]) * (1 - shadow);
     }
     
-
-    if (texToonActive == 1)
+    if (isTransparent == 1)
+        fragColor = vec4(texture(texShadow[3], fragTexCoord.xy).rgb, max(texture(texShadow[3], fragTexCoord.xy).a - 0.7, 0.0));
+    else if (texToonActive == 1)
         fragColor = vec4(texture(texShadow[2], vec2(lighting.x, bossHP * 512).xy).rgb, 1.0);
     else if (hasTexCoords)
         fragColor = vec4(lighting*texture(colorMap, fragTexCoord.xy).rgb, 1.0);

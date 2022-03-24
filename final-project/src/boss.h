@@ -17,13 +17,13 @@ class Boss: public Entity
 	unsigned int m_size{ 2 };
 
 	private:
-		void createBoss(std::filesystem::path const& body, std::filesystem::path const& head);
+		void createBoss(std::vector<std::filesystem::path> components);
 		
 
 	public:
 		glm::mat3 getJacobian();
 		std::queue<glm::vec3> getGradients();
-		Boss(std::filesystem::path const& body, std::filesystem::path const& head, int const& layers, Player* player);
+		Boss(std::vector<std::filesystem::path> components, Player* player);
 		void draw(Shader& shader);
 		glm::vec3 const& getLastPosition();
 		glm::vec3 const& getLastForward();

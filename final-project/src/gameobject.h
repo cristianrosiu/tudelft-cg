@@ -14,11 +14,18 @@ class GameObject : public Model
 		GameObject* parent = nullptr;
 		
 		Transform transform;
+		Texture rgbaTexture;
+		Texture baseColorTexture;
+		Texture specularTexture;
 		
 		// constructor, expects a filepath to a 3D model.
 		
 		GameObject();
 		GameObject(std::filesystem::path const& path);
+		GameObject(std::filesystem::path const& path, std::filesystem::path const& rgba);
+		GameObject(std::filesystem::path const& path, 
+				   std::filesystem::path const& baseColorTexture, 
+			       std::filesystem::path const& specularTexture);
 
 		//Add child. Argument input is argument of any constructor that you create.
 		//By default you can use the default constructor and don't put argument input.
@@ -31,6 +38,10 @@ class GameObject : public Model
 		void updateSelfAndChild();
 		// Force update of transform even if local space don't change
 		void forceUpdateSelfAndChild();
+
+		int getBaseColorTexture();
+		int getSpecularTexture();
+		int getRgbaTexture();
 };
 
 #endif

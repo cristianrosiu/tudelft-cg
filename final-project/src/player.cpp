@@ -5,8 +5,8 @@
 #include <glm/mat4x4.hpp>
 #include "glm/gtx/string_cast.hpp"
 
-Player::Player(std::filesystem::path const& path, Window* window, glm::mat4 projectionMatrix)
-    : GameObject(path), m_window(window), m_projectionMatrix(projectionMatrix), m_picker(window, projectionMatrix)
+Player::Player(std::filesystem::path const& path, Window* window, glm::mat4 projectionMatrix, std::filesystem::path const& baseColorTexture, std::filesystem::path const& specularTexture)
+    : GameObject(path, baseColorTexture, specularTexture), m_window(window), m_projectionMatrix(projectionMatrix), m_picker(window, projectionMatrix)
 {}
 
 void Player::update(glm::vec3 const& camPos, glm::mat4 const& camViewMatrix, float const &deltaTime)

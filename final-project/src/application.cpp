@@ -27,6 +27,7 @@ DISABLE_WARNINGS_POP()
 #include "player.h"
 #include "boss.h"
 #include <stb/stb_image.h>
+#include <map>
 
 #define MAX_PLAYER_HEALTH 100
 #define MAX_BOSS_HEALTH 100
@@ -132,22 +133,64 @@ public:
             for (int i = 0; i < 2; i++)
                 m_defaultShader.setMatrix("lights[" + std::to_string(i) + "].viewMatrix", m_projectionMatrix * m_lights[i].viewMatrix * dugeon.transform.getModelMatrix());
             configureMaterialUniforms(player);
+            m_defaultShader.setSampler("texShadow[5]", player.getBaseColorTexture(), 6);
+            m_defaultShader.setSampler("texShadow[6]", player.getSpecularTexture(), 7);
             m_defaultShader.setMatrix("modelMatrix", player.transform.getModelMatrix());
             glUniform1i(4, 1);
             //player.bindTexture(2, 3);
             player.draw(m_defaultShader);
 
-           if (textoonActive) {
-               m_defaultShader.setSampler("texShadow[2]", m_toonTexture.getTextureID(), 3);
-               glActiveTexture(GL_TEXTURE0+3);
-               glBindTexture(GL_TEXTURE_2D, m_toonTexture.getTextureID());
-               glUniform1i(2, 1);
-               glUniform1f(3, boss.getHealth() / 50);
-           }  
-           glUniform1i(4, 0);
-           boss.draw(m_defaultShader);
+            if (textoonActive) {
+                m_defaultShader.setSampler("texShadow[2]", m_toonTexture.getTextureID(), 3);
+                glActiveTexture(GL_TEXTURE0+3);
+                glBindTexture(GL_TEXTURE_2D, m_toonTexture.getTextureID());
+                glUniform1i(2, 1);
+                glUniform1f(3, boss.getHealth() / 50);
+            }  
+            glUniform1i(4, 0);
+            boss.draw(m_defaultShader);
 
+            // Draw smoke texture flying around 
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);     
+           
+            smoke1.transform.setLocalPosition( glm::vec3(std::sin(glfwGetTime() * 0.1) * 3, 1.f, 0.f));
+            smoke1.updateSelfAndChild();
 
+            smoke2.transform.setLocalPosition(glm::vec3(-std::sin(glfwGetTime() * 0.1) * 3, 2.f, 0.f));
+            smoke2.updateSelfAndChild();
+           
+
+            std::map<float, GameObject*> sorted;
+            float distance1 = m_cameras[activeCamera].position.y - smoke1.transform.getGlobalPosition().y;
+
+            float distance2 = m_cameras[activeCamera].position.y - smoke2.transform.getGlobalPosition().y;
+            
+
+            if (distance1 > distance2) {
+                m_defaultShader.setSampler("texShadow[3]", smoke1.getRgbaTexture(), 4);
+                m_defaultShader.setMatrix("modelMatrix", smoke1.transform.getModelMatrix());
+                glUniform1i(5, 1);
+                smoke1.draw(m_defaultShader);
+
+                m_defaultShader.setSampler("texShadow[4]", smoke1.getRgbaTexture(), 5);
+                m_defaultShader.setMatrix("modelMatrix", smoke2.transform.getModelMatrix());
+                glUniform1i(5, 1);
+                smoke2.draw(m_defaultShader);
+            }
+            else {
+                m_defaultShader.setSampler("texShadow[4]", smoke1.getRgbaTexture(), 5);
+                m_defaultShader.setMatrix("modelMatrix", smoke2.transform.getModelMatrix());
+                glUniform1i(5, 1);
+                smoke2.draw(m_defaultShader);
+
+                m_defaultShader.setSampler("texShadow[3]", smoke1.getRgbaTexture(), 4);
+                m_defaultShader.setMatrix("modelMatrix", smoke1.transform.getModelMatrix());
+                glUniform1i(5, 1);
+                smoke1.draw(m_defaultShader);
+            }
+
+            glUniform1i(5, 0);
             // Processes input and swaps the window buffer
             m_window.swapBuffers();
         }
@@ -307,6 +350,8 @@ private:
     Shader m_shadowShader;
 
     Texture m_toonTexture{"resources/toon_map.png"};
+    Texture m_specularTexture{ "resources/metal_specular.jpg" };
+
 
     ShadowMap m_shadowMaps[2]{ ShadowMap{glm::uvec2(4096)}, ShadowMap{glm::uvec2(4096)} };
     Light m_lights[2];
@@ -318,6 +363,8 @@ private:
     bool isCutscene = false;
     bool gameOver = false;
 
+    float tranlateSmoke = 0.f;
+
     GLfloat m_deltaTime;
 
     // Projection and view matrices for you to fill in and use
@@ -325,9 +372,11 @@ private:
     glm::mat4 m_viewMatrix = glm::lookAt(glm::vec3(-1, 1, -1), glm::vec3(0), glm::vec3(0, 1, 0));
     glm::mat4 m_modelMatrix { 1.0f };
 
-    Player player{ "./resources/animation_run", &m_window, m_projectionMatrix };
-    Boss boss{ "./resources/boss/body", "./resources/boss/head", 3, &player};
+    Player player{ "./resources/animation_run", &m_window, m_projectionMatrix, "resources/player-basecolor.jpg", "resources/player-specular.jpg" };
+    Boss boss{ std::vector<std::filesystem::path>{"./resources/boss/bodySmall", "./resources/boss/bodyMedium", "./resources/boss/bodyLarge", "./resources/boss/head"}, &player};
     GameObject dugeon{ "./resources/dungeon" };
+    GameObject smoke1 { "./resources/floor" , "resources/smoke.png" };
+    GameObject smoke2 { "./resources/floor" , "resources/smoke2.png" };
 };
 
 int main()

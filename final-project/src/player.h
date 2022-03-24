@@ -19,7 +19,8 @@ class Player : public GameObject, public Entity
 	MousePicker m_picker{m_window, m_projectionMatrix};
 
 	public:
-		Player(std::filesystem::path const& path, Window* window, glm::mat4 projectionMatrix);
+		Player(std::filesystem::path const& path, Window* window, glm::mat4 projectionMatrix,
+			std::filesystem::path const& baseColorTexture, std::filesystem::path const& specularTexture);
 
 		void update(glm::vec3 const& camPos, glm::mat4 const& camViewMatrix, float const& deltaTime);
 
